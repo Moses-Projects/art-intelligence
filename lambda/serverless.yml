@@ -1,0 +1,51 @@
+service: art-intelligence
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.10
+  memorySize: 1024
+  timeout: 6
+  stage: dev
+  region: us-west-2
+  vpc:
+    securityGroupIds:
+      - "sg-050ff079"
+    subnetIds:
+      - "subnet-780f7d30"
+      - "subnet-2e431148"
+
+custom:
+  prune:
+    automatic: true
+    number: 10
+  pythonRequirements:
+    slim: true
+    nodeploy:
+      - boto3
+      - botocore
+    useDownloadCache: true
+    useStaticCache: true
+    dockerizePip: non-linux
+
+package:
+  individually: true
+  patterns:
+    - "!.DS_Store"
+    - "!__pycache__/**"
+    - "!node_modules/**"
+    - "!tests/**"
+    - "!venv"
+    - "!versions/**"
+
+functions:
+  generator:
+    handler: generator.handler
+    layers:
+      - ${cf:moses-common-${sls:stage}.LayerExport}
+
+plugins:
+  - serverless-offline
+  - serverless-prune-plugin
+  - serverless-python-requirements
+
