@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>ARTificial INTELLIGENCE - Art by AI</title>
+		<link rel="stylesheet" href="/assets/tufte.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="AI generated art from AI generated descriptions of art.">
+		<meta name="keywords" content="AI, artificial intelligence, art, illustrations, painting">
+		<meta name="generator" content="handmade">
+	
+		<link rel="apple-touch-icon" sizes="57x57" href="/assets/apple-icon-57x57.png">
+		<link rel="apple-touch-icon" sizes="60x60" href="/assets/apple-icon-60x60.png">
+		<link rel="apple-touch-icon" sizes="72x72" href="/assets/apple-icon-72x72.png">
+		<link rel="apple-touch-icon" sizes="76x76" href="/assets/apple-icon-76x76.png">
+		<link rel="apple-touch-icon" sizes="114x114" href="/assets/apple-icon-114x114.png">
+		<link rel="apple-touch-icon" sizes="120x120" href="/assets/apple-icon-120x120.png">
+		<link rel="apple-touch-icon" sizes="144x144" href="/assets/apple-icon-144x144.png">
+		<link rel="apple-touch-icon" sizes="152x152" href="/assets/apple-icon-152x152.png">
+		<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-icon-180x180.png">
+		<link rel="icon" type="image/png" sizes="192x192"  href="/assets/android-icon-192x192.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon-96x96.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+		<link rel="manifest" href="/manifest.json">
+		<meta name="msapplication-TileColor" content="#da532c">
+		<meta name="theme-color" content="#ffffff">
+	<!-- 
+		<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#000000">
+	 -->
+		<meta name="apple-mobile-web-app-title" content="ART Int">
+		<meta name="application-name" content="ART Int">
+	</head>
+
+	<body>
+		<div class="logo">
+			<img src="/assets/dragonfly-logo.png" alt="ART Intelligence logo" title="ART Intelligence logo">
+		</div>
+		<h1>ART<i>ificial</i> INTELLIGENCE</h1>
+		<h2>Changes</h2>
+		
+		<p><a href="/">Home</a> | <a href="/changes.html">Changes</a> | About</p>
+		
+		<p>I saw <a href="https://nickgregory.me">Nick Gregory</a>'s <a href="https://diffusion.gallery">diffusion.gallery</a> site in the fall of 2022. Every five minutes, it uses the same simple prompt to an OpenAI model to generate a description of a painting. It then uses Stable Diffusion to generate an image from that description. It is a simple idea, but the results are fantastic: constantly refreshing, never-before-seen works of art. I have eight displays mounted to the walls in my office for Grafana, but have been mostly unused lately. I added diffusion.gallery to all eight displays attuned to a different points in diffusion.gallery's history of paintings. I love it!</p>
+		
+		<p>Some time later, I came across the wonderful <a href="https://supagruen.github.io/StableDiffusion-CheatSheet/">Stable Diffusion 1.5 - Cheat Sheet</a>. While diffusion.gallery has some variety, the huge list of artists in the Cheat Sheet showed me I could have so much more! New, better models were available and starting with a dynamic initial prompt based off artists details from the Cheat Sheet meant I should be able to have more variety with fewer unsuccessful mutated pictures.</p>
+		
+		<h3>Generator</h3>
+		<blockquote>
+			Nick's approach was to run his models on a local machine. I opted to call APIs, which costs more, but makes it easier to call more models and update to newer versions faster. The generator only runs every 20 minutes to keep costs reasonable. Here's how it works:
+		</blockquote>
+		<ol>
+			<li>Every 20 minutes, an Amazon Eventbridge schedule triggers the AWS Lambda generator function.</li>
+			<li>The generator chooses a basic subject, like &quot;landscape&quot; or &quot;architecture&quot;.</li>
+			<li>Using the Cheat Sheet artist data, the generator chooses an artist tagged with that subject and assembles a simple prompt to generate a description of a painting by an artist.</li>
+			<li>The generator feeds the prompt to the GPT 3.5 model through the OpenAI API to get a description of a painting, illustration, or photograph based on the artist's preferred art form.</li>
+			<li>Based on the artist's suggested model, the generator sends the description to the StabilityAI API or SinkinAI API to generate an image using the Stable Diffusion XL beta model, Stable Diffusion 1.5 model, Deliberate V2 checkpoint, Dreamshaper checkpoint, or Realistic Vision checkpoint.</li>
+			<li>The image is stored in Amazon S3 and all the prompt info and image metadata is stored in Amazon DynamoDB.</li>
+		</ol>
+		
+		<h3>Website</h3>
+		<blockquote>
+			Everything is hosted at AWS. The website uses CloudFront as CDN and webserver to serve pages and assets from S3 and route API calls to API Gateway. API Gateway calls a Lambda function to look up info on the next image from DynamoDB so the website will know what image to pull from S3.
+		</blockquote>
+		<blockquote>
+			Having written one of the first enterprise level CMSes, what CMS/website builder did I use? I wrote the HTML and CSS by hand in a text editor. Probably not the most efficient approach, but there are only a handful of pages. And I have control over what the website is doing, so I can keep it from doing any of the stupid tracking that is built into almost every website. No cookies. No local browser storage. There are logs, but those are for troubleshooting and clear after a few days.
+		</blockquote>
+		<blockquote>
+			The style of the website comes from <a href="https://edwardtufte.github.io/tufte-css/">Tufte CSS</a>.
+		</blockquote>
+		
+		<footer>
+			<a href="https://tim.moses.com">Other projects by Tim Moses</a>
+			<p xmlns:cc="http://creativecommons.org/ns#" xmlns:dct="http://purl.org/dc/terms/"><a property="dct:title" rel="cc:attributionURL" href="https://artintelligence.gallery">artintelligence.gallery</a> by <a rel="cc:attributionURL dct:creator" property="cc:attributionName" href="https://tim.moses.com">Tim Moses</a> is licensed under <a href="http://creativecommons.org/licenses/by/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">CC BY 4.0<img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"></a></p>
+			<p>No browser cookies, local storage, or session storage is used by this website.</p>
+		</footer>
+	</body>
+</html>

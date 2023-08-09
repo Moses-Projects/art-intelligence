@@ -1,0 +1,8 @@
+{
+	"method": "POST",
+	"path": "/get_search_results",
+	"body": {
+		"artist": "David Aja",
+		"limit": 2
+	}
+}

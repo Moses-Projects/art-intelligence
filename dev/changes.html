@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>ARTificial INTELLIGENCE - Art by AI</title>
+		<link rel="stylesheet" href="/assets/tufte.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="AI generated art from AI generated descriptions of art.">
+		<meta name="keywords" content="AI, artificial intelligence, art, illustrations, painting">
+		<meta name="generator" content="handmade">
+	
+		<link rel="apple-touch-icon" sizes="57x57" href="/assets/apple-icon-57x57.png">
+		<link rel="apple-touch-icon" sizes="60x60" href="/assets/apple-icon-60x60.png">
+		<link rel="apple-touch-icon" sizes="72x72" href="/assets/apple-icon-72x72.png">
+		<link rel="apple-touch-icon" sizes="76x76" href="/assets/apple-icon-76x76.png">
+		<link rel="apple-touch-icon" sizes="114x114" href="/assets/apple-icon-114x114.png">
+		<link rel="apple-touch-icon" sizes="120x120" href="/assets/apple-icon-120x120.png">
+		<link rel="apple-touch-icon" sizes="144x144" href="/assets/apple-icon-144x144.png">
+		<link rel="apple-touch-icon" sizes="152x152" href="/assets/apple-icon-152x152.png">
+		<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-icon-180x180.png">
+		<link rel="icon" type="image/png" sizes="192x192"  href="/assets/android-icon-192x192.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon-96x96.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+		<link rel="manifest" href="/manifest.json">
+		<meta name="msapplication-TileColor" content="#da532c">
+		<meta name="theme-color" content="#ffffff">
+	<!-- 
+		<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#000000">
+	 -->
+		<meta name="apple-mobile-web-app-title" content="ART Int">
+		<meta name="application-name" content="ART Int">
+	</head>
+
+	<body>
+		<div class="logo">
+			<img src="/assets/dragonfly-logo.png" alt="ART Intelligence logo" title="ART Intelligence logo">
+		</div>
+		<h1>ART<i>ificial</i> INTELLIGENCE</h1>
+		<h2>Changes</h2>
+		
+		<p><a href="/">Home</a> | Changes | <a href="/about.html">About</a></p>
+		
+		<h3>2023-09-09</h3>
+		<ul>
+			<li>Tried out Stable Diffusion XL 0.9 and 1.0. After figuring out that a resolution of less than 1024x1024 gives you a cropped image, I started getting somewhat better images than the beta. However, the most noticeable improvement to me is the lack of duplicate artifacts. With XL beta and 1.5, non-square pictures would often seem odd because there would be two main subjects when clearly there should have been one. Double streets, streams, or waterfalls would combine at unnatural angles. Pictures with mountains would have two distinctive and very similar peaks. Creepier still, tall portraits would sometimes have two faces, one above the other. The more I saw the artifacts, the more recognizable they became. I've only generated a couple dozen with XL 1.0 so far, but haven't spotted a duplicate artifact yet!</li>
+			<li>I switched to XL 1.0 as the default. It is roughly three times the cost, but definitely more than three times the success rate at producing high-quality images. I cut the generation rate to half, but will end up with more, usable pictures overall.</li>
+			<li>The thing that needs the most work right now seems to be the subjects associated with each artist. Most artists are tagged with simply &quot;landscape&quot; or &quot;portrait&quot; so prompts generated from those tags are too generic to produce anything similar to the artists' works. My plan is to create a new artist database and use the SD Cheat Sheet to populate the defaults, but go through each artist one by one to add a more specific list of subjects.</li>
+		</ul>
+		<h3>2023-07-27</h3>
+		<ul>
+			<li>Finished the new artists page! Browse and search the artist list. View images generated in the style of the artist next to an image search of the artist's work from DuckDuckGo. A Wikipedia summary of the artist is also displayed. This really points out to me which images are matching pretty well for an artist and which aren't. Clearly, the checkpoints make pretty images of people, but they aren't good at mimicking the artist at all. Stable Diffusion XL is the best choice in almost every case for the kind of prompts I'm using.</li>
+		</ul>
+		<h3>2023-07-24</h3>
+		<ul>
+			<li>Added the Realistic Vision checkpoint to the image generator to more accurately represent some artists.</li>
+			<li>Added Stable Diffusion XL and 1.5 to the image generator.</li>
+			<li>Set the default for all artists to SD XL for now. Previously, only the Deliberate V2 and Dreamshaper checkpoints were used. They are definitely prettier and more successful at producing a reasonable image, but they rarely represent the artist well.</li>
+			<li>After some review, set all artists to SD XL for now and may change some back after review.
+			<li>Added this changes page and the about page.</li>
+			<li>Added message about (no) cookies to website.</li>
+		</ul>
+		<h3>2023-07-24</h3>
+		<ul>
+			<li>Images are now generated based on a weighted list of subjects. Previously, an artist was chosen at random, but that heavily favored portraits of women.</li>
+		</ul>
+		
+		<footer>
+			<a href="https://tim.moses.com">Other projects by Tim Moses</a>
+			<p xmlns:cc="http://creativecommons.org/ns#" xmlns:dct="http://purl.org/dc/terms/"><a property="dct:title" rel="cc:attributionURL" href="https://artintelligence.gallery">artintelligence.gallery</a> by <a rel="cc:attributionURL dct:creator" property="cc:attributionName" href="https://tim.moses.com">Tim Moses</a> is licensed under <a href="http://creativecommons.org/licenses/by/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">CC BY 4.0<img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"><img style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"></a></p>
+			<p>No browser cookies, local storage, or session storage is used by this website.</p>
+		</footer>
+	</body>
+</html>

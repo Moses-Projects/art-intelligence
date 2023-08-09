@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>ARTificial INTELLIGENCE - Art by AI</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="AI generated art for AI generated descriptions of art.">
+		<meta name="keywords" content="AI, artificial intelligence, art, illustrations, painting">
+		<meta name="generator" content="handmade">
+	
+		<link rel="apple-touch-icon" sizes="57x57" href="/assets/apple-icon-57x57.png">
+		<link rel="apple-touch-icon" sizes="60x60" href="/assets/apple-icon-60x60.png">
+		<link rel="apple-touch-icon" sizes="72x72" href="/assets/apple-icon-72x72.png">
+		<link rel="apple-touch-icon" sizes="76x76" href="/assets/apple-icon-76x76.png">
+		<link rel="apple-touch-icon" sizes="114x114" href="/assets/apple-icon-114x114.png">
+		<link rel="apple-touch-icon" sizes="120x120" href="/assets/apple-icon-120x120.png">
+		<link rel="apple-touch-icon" sizes="144x144" href="/assets/apple-icon-144x144.png">
+		<link rel="apple-touch-icon" sizes="152x152" href="/assets/apple-icon-152x152.png">
+		<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-icon-180x180.png">
+		<link rel="icon" type="image/png" sizes="192x192"  href="/assets/android-icon-192x192.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon-96x96.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+		<link rel="manifest" href="/manifest.json">
+		<meta name="msapplication-TileColor" content="#da532c">
+		<meta name="theme-color" content="#ffffff">
+	<!-- 
+		<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#000000">
+	 -->
+		<meta name="apple-mobile-web-app-title" content="ART Int">
+		<meta name="application-name" content="ART Int">
+		<style>
+			div#artistDiv {
+				width: 20%;
+				position: absolute;
+				margin: 0;
+				top: 0;
+				bottom: 0;
+				left: 0;
+				background-color: #666;
+				font-family: sans-serif;
+				font-size: 1.0em;
+			}
+			div#searchDiv {
+				position: absolute;
+				overflow-y: auto;
+				top: 0;
+				height: 2.2em;
+				right: 0;
+				left: 0;
+				margin: 0;
+				padding: 0.6em;
+			}
+			input#searchField {
+				position: absolute;
+				top: 0.4em;
+				left: 0.4em;
+				right: 4.4em;
+				border: 1px solid black;
+				font-size: 1.0em;
+			}
+			div#selectedArtists {
+				position: absolute;
+				top: 0.6em;
+				right: 0.8em;
+				text-align: right;
+				color: #fff;
+				font-weight: bold;
+			}
+			ul#artistList {
+				position: absolute;
+				overflow-y: auto;
+				top: 2.2em;
+				bottom: 25%;
+				right: 0;
+				left: 0;
+				margin: 0;
+				padding: 0;
+				border-top: 1px solid black;
+			}
+			div#artistInfo {
+				position: absolute;
+				overflow-y: auto;
+				top: 75%;
+				bottom: 0;
+				right: 0;
+				left: 0;
+				margin: 0;
+				padding: 0.2em 1.0em;
+				border-top: 1px solid black;
+				background-color: #fff;
+			}
+			div#artistInfo a {
+				color: #000;
+			}
+			div#artistInfo a:hover {
+				color: #666;
+			}
+			ul#artistList li {
+				list-style: none;
+				margin: 0;
+				padding: .5em 1.0em;
+				border-bottom: 1px solid black;
+				background-color: #eee;
+				cursor: pointer;
+			}
+			ul#artistList li:hover {
+				background-color: #e5e5e5;
+			}
+			
+			div#imageList, div#searchList {
+				position: absolute;
+				margin:0;
+				top:0;
+				bottom:0;
+				width: 40%;
+				overflow-y: auto;
+				padding: 0;
+				background-color: #000;
+				font-family: sans-serif;
+				font-size: 1.0em;
+				text-align: center;
+				color: #fff;
+			}
+			div#imageList {
+				left: 20%;
+			}
+			div#searchList {
+				right: 0;
+			}
+			div#imageList h4, div#searchList h4 {
+				margin: .5em;
+				font-size: 1em;
+				font-weight: bold;
+			}
+			div#imageList a, div#searchList a {
+				color: #fff;
+			}
+			div#imageList a:hover, div#searchList a:hover {
+				color: #ccc;
+			}
+			div#imageList figure, div#searchList figure {
+				list-style: none;
+				margin: 0;
+				padding: .3em .3em;
+			}
+			div#imageList img, div#searchList img {
+				width: 100%;
+			}
+			div#imageList figcaption, div#searchList figcaption {
+				width: 100%;
+				height: 3em;
+				overflow-y: auto;
+				text-align: left;
+			}
+		</style>
+	</head>
+	<body style="margin: 0; padding: 0; background-color: black;">
+		<div id="artistDiv">
+			<div id="searchDiv">
+				<input type="text" id="searchField" onkeyup="return searchArtist(event)">
+				<div id="selectedArtists"></div>
+			</div>
+			<ul id="artistList">
+			</ul>
+			<div id="artistInfo">
+			</div>
+		</div>
+		<div id="imageList">
+		</div>
+		<div id="searchList">
+		</div>
+	</body>
+	<script type="text/javascript">
+		const searchField = document.getElementById("searchField");
+		const selectedArtists = document.getElementById("selectedArtists");
+		const artistList = document.getElementById("artistList");
+		const artistInfo = document.getElementById("artistInfo");
+		const imageList = document.getElementById("imageList");
+		const searchList = document.getElementById("searchList");
+		const urlParams = new URLSearchParams(location.search);
+		var artistButtons = []
+		
+		var currentArtistId = null;
+		
+		function loadArtists() {
+			artistList.innerText = 'Loading...';
+			fetch(`/api/get_artists`, {
+				method: 'GET',
+				headers: { 'Content-Type': 'application/json' }
+			})
+				.then(response => response.json())
+				.then(json => {
+					artistList.innerText = '';
+					for (const i in json.artists) {
+						artist = json.artists[i];
+						var liTag = document.createElement("li");
+						liTag.id = artist.id
+						liTag.classList.add('artist');
+						liTag.name = artist.name
+						liTag.addEventListener('click', function(evt) { showArtist(evt.srcElement); });
+						liTag.textContent = artist.sort_name;
+						artistList.appendChild(liTag);
+					}
+					artistButtons = document.getElementsByClassName('artist');
+					searchArtist()
+					
+					if (urlParams.get('id')) {
+						currentArtistId = urlParams.get('id');
+// 						console.log('currentArtistId: ' + currentArtistId)
+						artistButton = document.getElementById(currentArtistId)
+						if (artistButton) { showArtist(artistButton); }
+					}
+				});
+		}
+		
+		function searchArtist(event) {
+			if (searchField.value.length == 0) {
+				let cnt = 0;
+				for (let button of artistButtons) {
+					button.style.display = 'list-item';
+					cnt++;
+				}
+				selectedArtists.innerText = cnt
+				return
+			}
+			
+			let cnt = 0;
+			var search = new RegExp(searchField.value, "i");
+			for (let button of artistButtons) {
+				if (search.test(button.innerText)) {
+					button.style.display = 'list-item';
+					cnt++;
+				} else {
+					button.style.display = 'none';
+				}
+			}
+			selectedArtists.innerText = cnt
+		}
+		
+		function showArtist(artistButton) {
+			artistName = artistButton.name
+// 			console.log(artistName)
+			if (currentArtistId) {
+				document.getElementById(currentArtistId).style.backgroundColor = "#eee";
+			}
+			currentArtistId = artistButton.id
+			artistButton.style.backgroundColor = "#ccc";
+			artistInfo.innerText = 'Loading...';
+			imageList.innerText = 'Loading...';
+			searchList.innerText = 'Loading...';
+			var urlObj = new URL(window.location.href);
+			urlObj.searchParams.set('id', currentArtistId);
+			window.history.replaceState(null, '', urlObj.href);
+			
+			// So artist info
+			var data = {
+				"artist": artistName
+			}
+			fetch(`/api/get_artist`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(data)
+			})
+				.then(response => response.json())
+				.then(json => {
+					console.log('/api/get_artist');
+					console.log(json);
+					artistInfo.innerText = '';
+					if (json && json.artist) {
+						if (json.artist.wikipedia_title && json.artist.wikipedia_url) {
+							var headerTag = document.createElement("h3");
+							artistInfo.appendChild(headerTag);
+							
+							var aTag = document.createElement("a");
+							aTag.target = "_blank";
+							aTag.href = json.artist.wikipedia_url;
+							aTag.classList.add('external');
+							aTag.innerText = json.artist.wikipedia_title + " (Wikipedia)"
+							headerTag.appendChild(aTag);
+							if (json.artist.wikipedia_summary) {
+								var summTag = document.createElement("div");
+								summTag.innerText = json.artist.wikipedia_summary
+								artistInfo.appendChild(summTag);
+							}
+						}
+					}
+				});
+			
+			// Show artist images
+			var data = {
+				"offset": 1,
+				"artist": artistName,
+				"nsfw": false,
+				"score": 3,
+				"limit": 8
+			}
+			fetch(`/api/get_latest`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(data)
+			})
+				.then(response => response.json())
+				.then(json => {
+					console.log('/api/get_latest');
+					console.log(json);
+					imageList.innerText = '';
+					var headTag = document.createElement("h4");
+					headTag.innerText = "Generated images for " + artistName;
+					imageList.appendChild(headTag);
+					if (json && json.images && json.images.length) {
+						imageList.innerText = '';
+						var headTag = document.createElement("h4");
+						imageList.appendChild(headTag);
+						
+						var aTag = document.createElement("a");
+						aTag.target = "_blank";
+						aTag.href = "/recent.html?artist=" + artistName;
+						aTag.classList.add('external');
+						aTag.innerText = "Generated images for " + artistName + " (ArtIntelligence)"
+						headTag.appendChild(aTag);
+						
+						for (const i in json.images) {
+							image = json.images[i];
+							var figTag = document.createElement("figure");
+							imageList.appendChild(figTag);
+							var imgTag = document.createElement("img");
+							imgTag.src = `/images/` + image.filename;
+							figTag.appendChild(imgTag);
+							var captionTag = document.createElement("figcaption");
+							if (image.model) {
+								captionTag.innerText = image.model + ': ' + image.prompt;
+							} else {
+								captionTag.innerText = image.engine_label + ': ' + image.prompt;
+							}
+							figTag.appendChild(captionTag);
+						}
+					} else {
+						var messageTag = document.createElement("div");
+						messageTag.innerText = "No images generated for this artist"
+						imageList.appendChild(messageTag);
+					}
+				});
+			
+			// Show search results
+			var data = {
+				"offset": 1,
+				"artist": artistName,
+				"limit": 8
+			}
+			fetch(`/api/get_search_results`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(data)
+			})
+				.then(response => response.json())
+				.then(json => {
+					console.log('/api/get_search_results');
+					console.log(json);
+					searchList.innerText = '';
+					var headTag = document.createElement("h4");
+					headTag.innerText = "Search results for " + artistName;
+					searchList.appendChild(headTag);
+					if (json) {
+						searchList.innerText = '';
+						var headTag = document.createElement("h4");
+						searchList.appendChild(headTag);
+						
+						var aTag = document.createElement("a");
+						aTag.target = "_blank";
+						aTag.href = json.url;
+						aTag.classList.add('external');
+						aTag.innerText = "Search results for " + artistName + " (DuckDuckGo)"
+						headTag.appendChild(aTag);
+						for (const i in json.images) {
+							image = json.images[i];
+							var figTag = document.createElement("figure");
+							searchList.appendChild(figTag);
+							var imgTag = document.createElement("img");
+							imgTag.src = image.thumbnail;
+							figTag.appendChild(imgTag);
+							var captionTag = document.createElement("figcaption");
+							captionTag.innerText = image.title;
+							figTag.appendChild(captionTag);
+						}
+					} else {
+						var messageTag = document.createElement("div");
+						messageTag.innerText = "No search results for this artist"
+						imageList.appendChild(messageTag);
+					}
+				});
+		}
+		
+		loadArtists();
+		
+	</script>
+</html>

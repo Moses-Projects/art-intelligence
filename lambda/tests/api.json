@@ -1,0 +1,12 @@
+{
+	"method": "POST",
+	"path": "/get_latest",
+	"query": {
+	},
+	"body": {
+		"offset": 0,
+		"search": null,
+		"exact_score": "no_score"
+	}
+
+}

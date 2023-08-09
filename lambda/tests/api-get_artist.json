@@ -1,0 +1,8 @@
+{
+	"method": "POST",
+	"path": "/get_artist",
+	"body": {
+		"artist": "Edward Gorey",
+		"limit": 2
+	}
+}

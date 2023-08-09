@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>ARTificial INTELLIGENCE - Art by AI</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="AI generated art for AI generated descriptions of art.">
+		<meta name="keywords" content="AI, artificial intelligence, art, illustrations, painting">
+		<meta name="generator" content="handmade">
+	
+		<link rel="apple-touch-icon" sizes="57x57" href="/assets/apple-icon-57x57.png">
+		<link rel="apple-touch-icon" sizes="60x60" href="/assets/apple-icon-60x60.png">
+		<link rel="apple-touch-icon" sizes="72x72" href="/assets/apple-icon-72x72.png">
+		<link rel="apple-touch-icon" sizes="76x76" href="/assets/apple-icon-76x76.png">
+		<link rel="apple-touch-icon" sizes="114x114" href="/assets/apple-icon-114x114.png">
+		<link rel="apple-touch-icon" sizes="120x120" href="/assets/apple-icon-120x120.png">
+		<link rel="apple-touch-icon" sizes="144x144" href="/assets/apple-icon-144x144.png">
+		<link rel="apple-touch-icon" sizes="152x152" href="/assets/apple-icon-152x152.png">
+		<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-icon-180x180.png">
+		<link rel="icon" type="image/png" sizes="192x192"  href="/assets/android-icon-192x192.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon-96x96.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+		<link rel="manifest" href="/manifest.json">
+		<meta name="msapplication-TileColor" content="#da532c">
+		<meta name="theme-color" content="#ffffff">
+	<!-- 
+		<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#000000">
+	 -->
+		<meta name="apple-mobile-web-app-title" content="ART Int">
+		<meta name="application-name" content="ART Int">
+	</head>
+	<body style="margin: 0; padding: 0; background-color: black;">
+		<div style="width: 100%; position: absolute; margin:0 0 3px 0; top:0; bottom:4.6em; left:0; right:0;">
+			<img id="img" style="height: 100%; width: 100%; object-fit: contain; position: relative; margin:auto; cursor: pointer;" onClick="nextImage()" />
+		</div>
+		<div style="position: absolute; height: 3.4em; bottom: 0; left: 0; right: 0; padding: 5px; overflow-y:auto; background-color: rgba(255, 255, 255, 0.6); color: black; font-family: sans-serif; font-size: 1.2em;" id="comment_display">Loading...</div>
+	</body>
+	<script type="text/javascript">
+		const img = document.getElementById("img");
+		const commentDisplay = document.getElementById("comment_display");
+		const urlParams = new URLSearchParams(location.search);
+		
+		var interval;
+		var intervalDuration = 5 * 60 * 1000;
+		
+		function nextImage() {
+			clearInterval(interval);
+			show()
+		}
+		
+		function show() {
+			commentDisplay.innerText = 'Loading...';
+			var data = {
+				"nsfw": false,
+				"score": 3
+			}
+			if (urlParams.get('artist')) { data['artist'] = urlParams.get('artist'); }
+			if (urlParams.get('search')) { data['search'] = urlParams.get('search'); }
+			if (urlParams.get('orientation')) { data['orientation'] = urlParams.get('orientation'); }
+			
+			fetch(`/api/get`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(data)
+			})
+				.then(response => response.json())
+				.then(json => {
+					if (json['images'] && json['images'].length) {
+						console.log(json);
+						commentDisplay.innerText = json['images'][0].id + ': ' + json['images'][0].prompt;
+						img.src = `/images/` + json['images'][0].filename;
+					} else {
+						commentDisplay.innerText = "No images found";
+						img.src = `/assets/not-found.png`;
+					}
+				});
+			interval = setInterval(nextImage, intervalDuration);
+		}
+		
+		show();
+		
+	</script>
+</html>
