@@ -1,5 +1,4 @@
 {
-	"method": "POST",
-	"path": "/generate",
-	"body": {}
+	"artist": "Andreas Achenbach",
+	"genre": "landscape"
 }

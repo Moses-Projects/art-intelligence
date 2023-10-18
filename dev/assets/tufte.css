@@ -104,9 +104,18 @@ p.subtitle {
 .logo {
 	float:right;
 	width:40%;
+	aspect-ratio: 1 / 1;
 	margin-left: 16px;
 	margin-bottom: 10px;
 }
+.logo img {
+	position: relative;
+	object-fit: contain;
+	height: 100%;
+	width: 100%;
+	margin:auto;
+}
+
 .numeral {
     font-family: et-book-roman-old-style; 
 }

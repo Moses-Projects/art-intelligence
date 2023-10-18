@@ -29,6 +29,24 @@
 	 -->
 		<meta name="apple-mobile-web-app-title" content="ART Int">
 		<meta name="application-name" content="ART Int">
+		<style>
+			.button {
+				border: none;
+				border-radius: 20px;
+				padding: 10px 20px;
+				width: 200px;
+				height: 3.6em;
+				margin: 10px;
+				background-color: rgba(255, 255, 255, 0.6);
+				font-family: sans-serif;
+				font-size: 1.0em;
+				text-align: center;
+				cursor: pointer;
+			}
+			.button:hover {
+				background-color: #ddd;
+			}
+		</style>
 	</head>
 	<body style="margin: 0; padding: 0; background-color: black;">
 		<div style="width: 100%; position: absolute; margin:0 0 3px 0; top:0; bottom:4.6em; left:0; right:0;">
@@ -36,11 +54,15 @@
 		</div>
 		<div style="width: 50%; height: 100%; position: absolute; margin:0 0 3px 0; top:0; bottom:4.6em; left:0; cursor: w-resize;" onClick="prevImage()"></div>
 		<div style="width: 50%; height: 100%; position: absolute; margin:0 0 3px 0; top:0; bottom:4.6em; right:0; cursor: e-resize;" onClick="nextImage()"></div>
-		<div style="position: absolute; height: 3.4em; bottom: 0; left: 0; right: 0; padding: 5px; overflow-y:auto; background-color: rgba(255, 255, 255, 0.6); color: black; font-family: sans-serif; font-size: 1.2em;" id="comment_display">Loading...</div>
+		<div id="commentDisplay" style="position: absolute; height: 3.4em; bottom: 0; left: 0; right: 4.2em; padding: 5px; overflow-y:auto; background-color: rgba(255, 255, 255, 0.6); color: black; font-family: sans-serif; font-size: 1.2em;">Loading...</div>
+		<div style="position: absolute; height: 3.3em; bottom: 0; width: 4.6em; right: 0; padding: 8px;">
+			<a id="buttonDownload" class="button" href="" style="height: 1.8em; width: 1.8em; font-size: 36px; text-decoration:none;">&#x2913;</a>
+		</div>
 	</body>
 	<script type="text/javascript">
 		const img = document.getElementById("img");
-		const commentDisplay = document.getElementById("comment_display");
+		const commentDisplay = document.getElementById("commentDisplay");
+		const buttonDownload = document.getElementById("buttonDownload");
 		const urlParams = new URLSearchParams(location.search);
 		
 		var interval;
@@ -64,6 +86,10 @@
 				"nsfw": false,
 				"exact_score": 1
 			}
+			if (urlParams.get('artist')) { data['artist'] = urlParams.get('artist'); }
+			if (urlParams.get('search')) { data['search'] = urlParams.get('search'); }
+			if (urlParams.get('orientation')) { data['orientation'] = urlParams.get('orientation'); }
+			
 			fetch(`/api/get_latest`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -73,8 +99,14 @@
 				.then(json => {
 					if (json['images'] && json['images'].length) {
 						console.log(json);
-						commentDisplay.innerText = json['images'][0].id + ': ' + json['images'][0].prompt;
-						img.src = `/images/` + json['images'][0].filename;
+						image = json['images'][0]
+						if (image.model) {
+							commentDisplay.innerText = image.id + ' ' + image.model + ': ' + image.prompt;
+						} else {
+							commentDisplay.innerText = image.id + ' ' + image.engine_label + ': ' + image.prompt;
+						}
+						img.src = `/images/` + image.filename;
+						buttonDownload.href = img.src;
 						currentOffset = json.offset;
 						var urlObj = new URL(window.location.href);
 						urlObj.searchParams.set('offset', currentOffset);

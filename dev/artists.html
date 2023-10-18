@@ -255,7 +255,7 @@
 			
 			// So artist info
 			var data = {
-				"artist": artistName
+				"artist_id": currentArtistId
 			}
 			fetch(`/api/get_artist`, {
 				method: 'POST',
@@ -268,21 +268,28 @@
 					console.log(json);
 					artistInfo.innerText = '';
 					if (json && json.artist) {
-						if (json.artist.wikipedia_title && json.artist.wikipedia_url) {
-							var headerTag = document.createElement("h3");
-							artistInfo.appendChild(headerTag);
-							
-							var aTag = document.createElement("a");
-							aTag.target = "_blank";
-							aTag.href = json.artist.wikipedia_url;
-							aTag.classList.add('external');
-							aTag.innerText = json.artist.wikipedia_title + " (Wikipedia)"
-							headerTag.appendChild(aTag);
-							if (json.artist.wikipedia_summary) {
-								var summTag = document.createElement("div");
-								summTag.innerText = json.artist.wikipedia_summary
-								artistInfo.appendChild(summTag);
-							}
+						if (!json.artist.external_url) {
+							json.artist.external_url = 'https://duckduckgo.com/?q=' + json.artist.name + ' artist bio'
+						}
+						var headerTag = document.createElement("h3");
+						artistInfo.appendChild(headerTag);
+						
+						var aTag = document.createElement("a");
+						aTag.target = "_blank";
+						aTag.href = json.artist.external_url;
+						aTag.classList.add('external');
+						aTag.innerText = json.artist.name
+						if (/wikipedia/.test(json.artist.external_url)) {
+							aTag.innerText += " (Wikipedia)"
+						}
+						else if (/duckduckgo/.test(json.artist.external_url)) {
+							aTag.innerText += " (DuckDuckGo)"
+						}
+						headerTag.appendChild(aTag);
+						if (json.artist.bio) {
+							var summTag = document.createElement("div");
+							summTag.innerText = json.artist.bio
+							artistInfo.appendChild(summTag);
 						}
 					}
 				});
@@ -290,7 +297,7 @@
 			// Show artist images
 			var data = {
 				"offset": 1,
-				"artist": artistName,
+				"artist_id": currentArtistId,
 				"nsfw": false,
 				"score": 3,
 				"limit": 8
@@ -305,19 +312,15 @@
 					console.log('/api/get_latest');
 					console.log(json);
 					imageList.innerText = '';
-					var headTag = document.createElement("h4");
-					headTag.innerText = "Generated images for " + artistName;
-					imageList.appendChild(headTag);
 					if (json && json.images && json.images.length) {
-						imageList.innerText = '';
 						var headTag = document.createElement("h4");
 						imageList.appendChild(headTag);
 						
 						var aTag = document.createElement("a");
 						aTag.target = "_blank";
-						aTag.href = "/recent.html?artist=" + artistName;
+						aTag.href = "/recent.html?artist_id=" + currentArtistId;
 						aTag.classList.add('external');
-						aTag.innerText = "Generated images for " + artistName + " (ArtIntelligence)"
+						aTag.innerText = "Generated images (ArtIntelligence)"
 						headTag.appendChild(aTag);
 						
 						for (const i in json.images) {
@@ -329,9 +332,9 @@
 							figTag.appendChild(imgTag);
 							var captionTag = document.createElement("figcaption");
 							if (image.model) {
-								captionTag.innerText = image.model + ': ' + image.prompt;
+								captionTag.innerText = image.id + ' ' + image.model + ': ' + image.prompt;
 							} else {
-								captionTag.innerText = image.engine_label + ': ' + image.prompt;
+								captionTag.innerText = image.id + ' ' + image.engine_label + ': ' + image.prompt;
 							}
 							figTag.appendChild(captionTag);
 						}
@@ -345,7 +348,7 @@
 			// Show search results
 			var data = {
 				"offset": 1,
-				"artist": artistName,
+				"artist_id": currentArtistId,
 				"limit": 8
 			}
 			fetch(`/api/get_search_results`, {
@@ -358,11 +361,7 @@
 					console.log('/api/get_search_results');
 					console.log(json);
 					searchList.innerText = '';
-					var headTag = document.createElement("h4");
-					headTag.innerText = "Search results for " + artistName;
-					searchList.appendChild(headTag);
 					if (json) {
-						searchList.innerText = '';
 						var headTag = document.createElement("h4");
 						searchList.appendChild(headTag);
 						
@@ -370,7 +369,7 @@
 						aTag.target = "_blank";
 						aTag.href = json.url;
 						aTag.classList.add('external');
-						aTag.innerText = "Search results for " + artistName + " (DuckDuckGo)"
+						aTag.innerText = "Search results for " + json.artist.name + " (DuckDuckGo)"
 						headTag.appendChild(aTag);
 						for (const i in json.images) {
 							image = json.images[i];

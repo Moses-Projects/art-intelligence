@@ -30,156 +30,619 @@
 		<meta name="apple-mobile-web-app-title" content="ART Int">
 		<meta name="application-name" content="ART Int">
 		<style>
-			.button {
+			button.leftCornerButton, button.rightCornerButton {
+				position: absolute;
+				top: 2px;
+			}
+			div.gridButtons {
+				position: absolute;
+				top: 2px;
+				right: 20px;
+			}
+			button.leftCornerButton, button.rightCornerButton, .gridButtons button {
+				width: 1.6em;
+				height: 1.6em;
 				border: none;
-				border-radius: 20px;
-				padding: 10px 20px;
-				width: 200px;
-				height: 3.6em;
-				margin: 10px;
+				border-radius: 0.5em;
 				background-color: #eee;
+				text-align: center;
+				font-size: 1em;
+				cursor: pointer;
+			}
+			button.leftCornerButton:hover, button.rightCornerButton:hover, .gridButtons button:hover {
+				background-color: #e5e5e5;
+			}
+			button.leftCornerButton:active, button.rightCornerButton:active, .gridButtons button:active {
+				background-color: #ccc;
+			}
+			button.leftCornerButton {
+				left: 2px;
+			}
+			button.rightCornerButton {
+				right: 2px;
+			}
+			div.gridButtons button {
+				margin-left: 0.2em;
+			}
+			
+			div#artistDiv {
+				width: 20%;
+				position: absolute;
+				margin: 0;
+				top: 0;
+				bottom: 0;
+				left: 0;
+				background-color: #666;
+				font-family: sans-serif;
+				font-size: 0.8em;
+			}
+			div#searchDiv {
+				position: absolute;
+				overflow-y: auto;
+				top: 0;
+				height: 2.2em;
+				right: 0;
+				left: 0;
+				margin: 0;
+				padding: 0.6em;
+			}
+			input#searchField {
+				position: absolute;
+				top: 0.4em;
+				left: 0.4em;
+				right: 4.4em;
+				border: 1px solid black;
+				font-size: 1.0em;
+			}
+			div#selectedArtists {
+				position: absolute;
+				top: 0.6em;
+				right: 0.8em;
+				text-align: right;
+				color: #fff;
+				font-weight: bold;
+			}
+			ul#artistList {
+				position: absolute;
+				overflow-y: auto;
+				top: 2.2em;
+				bottom: 80%;
+				right: 0;
+				left: 0;
+				margin: 0;
+				padding: 0;
+				border-top: 1px solid black;
+			}
+			ul#artistList li {
+				list-style: none;
+				margin: 0;
+				padding: 0.3em 0.8em;
+				border-bottom: 1px solid black;
+				background-color: #eee;
+				cursor: pointer;
+			}
+			ul#artistList li:hover {
+				background-color: #e5e5e5;
+			}
+			
+			
+			div#artistInfo {
+				position: absolute;
+				overflow-y: auto;
+				top: 20%;
+				bottom: 60%;
+				right: 0;
+				left: 0;
+				margin: 0;
+				padding: 0.2em 0.8em;
+				border-top: 2px solid black;
+				background-color: #fff;
+			}
+			div#artistInfo h3 {
+				margin: 0.3em 0;
+				font-size: 1.0em;
+			}
+			div#artistInfo a {
+				color: #000;
+			}
+			div#artistInfo a:hover {
+				color: #666;
+			}
+			
+			
+			ul#genresList {
+				position: absolute;
+				overflow-y: auto;
+				top: 40%;
+				bottom: 50%;
+				right: 0;
+				left: 0;
+				margin: 0;
+				padding: 0;
+				border-top: 2px solid black;
+			}
+			ul#genresList li {
+				list-style: none;
+				margin: 0;
+				padding: 4px 10px;
+				border-bottom: 1px solid black;
+				background-color: #eee;
+				cursor: pointer;
+			}
+			ul#genresList li:hover {
+				background-color: #e5e5e5;
+			}
+			ul#genresList li#genreAddButton {
+				font-size: 0.8em;
+				font-weight: bold;
+			}
+			
+			
+			div#genreInfo {
+				position: absolute;
+				overflow-y: auto;
+				top: 50%;
+				bottom: 0;
+				right: 0;
+				left: 0;
+				margin: 0;
+				padding: 0.2em 0em;
+				border-top: 2px solid black;
+				background-color: #fff;
+			}
+			div#genreInfo div#genresControls {
+				text-align: center;
+			}
+			div#genreInfo div#genresControls button {
+				width: 6em;
+				margin: 0.5em 0.3em;
+				font-weight: bold;
+				cursor: pointer;
+			}
+			div#genreInfo div#genresControls button#deleteGenreButton {
+				color: #c00;
+			}
+			div#genreInfo label {
+				display: block;
+				margin-left: 5%;
+				font-size: 0.8em;
+				font-weight: bold;
+			}
+			div#genreInfo textarea, div#genreInfo input, div#genreInfo select {
+				display: block;
+				margin-left: 10%;
+				width: 85%;
+			}
+			div#genreInfo textarea, div#genreInfo input {
+				border: 1px #bbb solid;
+				font-size: 0.8em;
+			}
+			div#genreInfo textarea {
+				height: 3.5em;
+			}
+			div#genreInfo textarea.largeTextarea {
+				height: 7em;
+			}
+			div#genreInfo div#aspectRatioExamples {
+				margin-left: 10%;
+				width: 85%;
+			}
+			div.aspectRatioExample {
+				display: inline-block;
+				border: 1px #bbb solid;
+				font-size: 0.4em;
+				text-align: center;
+				cursor: pointer;
+			}
+			div.aspectRatioSpacer {
+				display: inline-block;
+				height: 1px;
+			}
+			
+			div#imageList, div#searchList {
+				position: absolute;
+				margin:0;
+				top:0;
+				bottom:0;
+				width: 40%;
+				padding: 0;
+				background-color: #000;
 				font-family: sans-serif;
 				font-size: 1.0em;
 				text-align: center;
-				cursor: pointer;
+				color: #fff;
+			}
+			div#imageList {
+				left: 20%;
+			}
+			div#searchList {
+				right: 0;
+			}
+			div#imageListHeader, div#searchListHeader {
+				position: absolute;
+				top: 0;
+				height:2em;
+				width: 100%;
+			}
+			div#imageListHeader h4, div#searchListHeader h4 {
+				margin: .5em;
+				font-size: 1em;
+				font-weight: bold;
+			}
+			div#imageListHeader a, div#searchListHeader a {
+				color: #fff;
+			}
+			div#imageListHeader a:hover, div#searchListHeader a:hover {
+				color: #ccc;
+			}
+			div#imageListResults, div#searchListResults {
+				position: absolute;
+				top: 2em;
+				bottom:0;
+				width: 100%;
+				overflow-y: auto;
+			}
+			div#imageListResults figure, div#searchListResults figure {
+				display: inline-block;
+				margin: 0;
+				padding: .3em .3em;
+			}
+			div#imageListResults.col1 figure, div#searchListResults.col1 figure {
+				width: 99%;
+			}
+			div#imageListResults.col2 figure, div#searchListResults.col2 figure {
+				width: 48%;
+			}
+			div#imageListResults.col3 figure, div#searchListResults.col3 figure {
+				width: 31%;
+			}
+			div#imageListResults.col4 figure, div#searchListResults.col4 figure {
+				width: 23%;
+			}
+			div#imageListResults img, div#searchListResults img {
+				width: 100%;
+			}
+			div#imageListResults figcaption, div#searchListResults figcaption {
+				width: 100%;
+				height: 3em;
+				overflow-y: auto;
+				text-align: left;
 			}
 		</style>
 	</head>
 	<body style="margin: 0; padding: 0; background-color: black;">
-		<div id="search_pane" style="position: absolute; height: 1.2em; top: 0; left: 0; right: 0; background-color: rgba(255, 255, 255, 0.2); color: white; font-family: sans-serif; font-size: 1.0em; text-align:center; padding: 5px">
-			<form id="searchForm" onsubmit="search(event)" style="text-size:1.0em">
-				<span id="totalDisplay" style="display:inline-block; width:10%"></span>
-				<label for="nsfwField">NSFW</label>
-				<select id="nsfwField" onchange="show(1)">
-					<option value="">-</option>
-					<option value="none">None</option>
-					<option value="only">Only</option>
-				</select>
-				<label for="scoreField">Score</label>
-				<select id="scoreField" onchange="show(1)">
-					<option value="">-</option>
-					<option value="noScore">No score</option>
-					<option value="1">1</option>
-					<option value="2">2</option>
-					<option value="3">3</option>
-					<option value="4">4</option>
-					<option value="5">5</option>
-				</select>
-				<input type="text" id="searchField" onkeydown="return search(event)" style="width:20%">
-				<button type="submit">Search</button>
-			</form>
+		<div id="artistDiv">
+			<div id="searchDiv">
+				<input type="text" id="searchField" onkeyup="return searchArtist(event)">
+				<div id="selectedArtists"></div>
+			</div>
+			<ul id="artistList"></ul>
+			<div id="artistInfo"></div>
+			<ul id="genresList"></ul>
+			<div id="genreInfo">
+				<form id="genreForm" style="display:none;">
+					<div id="genresControls">
+						<button id="deleteGenreButton" class="button" onClick="deleteGenre(event)" disabled>Delete</button>
+						<button id="saveGenreButton" class="button" onClick="saveGenre(event)" disabled>Save</button>
+						<button id="generateGenreButton" class="button" onClick="generateGenre(event)" disabled>Generate</button>
+					</div>
+					<label for="name">Genre (for internal reference only)</label>
+					<select name="name" oninput="enableGenreForm()">
+						<option value="">Select a genre...</option>
+						<option value="default">default</option>
+						<option value="abstract">abstract</option>
+						<option value="anatomy">anatomy</option>
+						<option value="animal painting">animal painting</option>
+						<option value="animation">animation</option>
+						<option value="anime">anime</option>
+						<option value="architecture">architecture</option>
+						<option value="avant-garde">avant-garde</option>
+						<option value="botanical">botanical</option>
+						<option value="caricature">caricature</option>
+						<option value="character design">character design</option>
+						<option value="cityscape">cityscape</option>
+						<option value="collage">collage</option>
+						<option value="comic book">comic book</option>
+						<option value="cubist">cubist</option>
+						<option value="dark humor">dark humor</option>
+						<option value="design">design</option>
+						<option value="expressionist">expressionist</option>
+						<option value="fantasy">fantasy</option>
+						<option value="fashion">fashion</option>
+						<option value="genre painting">genre painting</option>
+						<option value="graffiti">graffiti</option>
+						<option value="horror">horror</option>
+						<option value="illustration">illustration</option>
+						<option value="interior">interior</option>
+						<option value="landscape">landscape</option>
+						<option value="manga">manga</option>
+						<option value="marine">marine</option>
+						<option value="mural">mural</option>
+						<option value="photograph">photograph</option>
+						<option value="pin-up">pin-up</option>
+						<option value="portrait">portrait</option>
+						<option value="psychedelic art">psychedelic art</option>
+						<option value="religious painting">religious painting</option>
+						<option value="sci-fi">sci-fi</option>
+						<option value="sculpture">sculpture</option>
+						<option value="sketch and study">sketch and study</option>
+						<option value="still life">still life</option>
+						<option value="storybook">storybook</option>
+						<option value="surreal">surreal</option>
+						<option value="symbolic painting">symbolic painting</option>
+						<option value="wildlife painting">wildlife painting</option>
+					</select>
+					<label for="methods">Methods</label>
+					<select oninput="addToField('methods', event)">
+						<option value="">Add a method...</option>
+						<option value="acrylic painting">acrylic painting</option>
+						<option value="aquatint print">aquatint print</option>
+						<option value="chalk drawing">chalk drawing</option>
+						<option value="charcoal drawing">charcoal drawing</option>
+						<option value="collage">collage</option>
+						<option value="digital painting">digital painting</option>
+						<option value="engraving">engraving</option>
+						<option value="fresco">fresco</option>
+						<option value="frieze">frieze</option>
+						<option value="glass sculpture">glass sculpture</option>
+						<option value="gouache painting">gouache painting</option>
+						<option value="illustration">illustration</option>
+						<option value="linocut">linocut</option>
+						<option value="lithograph">lithograph</option>
+						<option value="marble sculpture">marble sculpture</option>
+						<option value="oil painting">oil painting</option>
+						<option value="painting">painting</option>
+						<option value="pastel">pastel</option>
+						<option value="pen and ink drawing">pen and ink drawing</option>
+						<option value="pencil drawing">pencil drawing</option>
+						<option value="pencil sketch">pencil sketch</option>
+						<option value="photograph">photograph</option>
+						<option value="print illustration">print illustration</option>
+						<option value="screen print">screen print</option>
+						<option value="sculpture">sculpture</option>
+						<option value="tempera painting">tempera painting</option>
+						<option value="watercolor painting">watercolor painting</option>
+						<option value="woodblock print">woodblock print</option>
+						<option value="woodcut">woodcut</option>
+					</select>
+					<textarea name="methods" oninput="enableGenreForm()"></textarea>
+					<label for="subjects">Subjects</label>
+					<select oninput="addToField('subjects', event)">
+						<option value="">Add a GPT prompt for subjects of...</option>
+						<option value="digital paintings">digital paintings</option>
+						<option value="drawings">drawings</option>
+						<option value="frescos">frescos</option>
+						<option value="illustrations">illustrations</option>
+						<option value="paintings">paintings</option>
+						<option value="prints">prints</option>
+						<option value="photographs">photographs</option>
+						<option value="sculptures">sculptures</option>
+						<option value="sketches">sketches</option>
+					</select>
+					<textarea class="largeTextarea" name="subjects" oninput="enableGenreForm()"></textarea>
+					<label for="styles">Styles</label>
+					<textarea name="styles" oninput="enableGenreForm()"></textarea>
+					<label for="modifiers">Modifiers</label>
+					<textarea name="modifiers" oninput="enableGenreForm()"></textarea>
+					<label for="locations">Locations</label>
+					<textarea name="locations" oninput="enableGenreForm()"></textarea>
+<!-- 
+					<label for="aspect_ratios">Aspect ratios</label>
+					<div id="aspectRatioExamples"></div>
+					<textarea name="aspect_ratios" oninput="enableGenreForm()"></textarea>
+ -->
+					<label for="time_period">Time Period</label>
+					<input name="time_period" oninput="enableGenreForm()" />
+					<label for="notes">Notes</label>
+					<textarea class="largeTextarea" name="notes" oninput="enableGenreForm()"></textarea>
+				</form>
+			</div>
 		</div>
-		<div style="width: 100%; position: absolute; margin:2px 0 13px 0; top:1.8em; bottom:9.4em; left:0; right:0;">
-			<img id="img" style="height: 100%; width: 100%; object-fit: contain; position: relative; margin:auto;" />
+		<div id="imageList">
 		</div>
-		<div style="width: 50%; height: 100%; position: absolute; margin:2px 0 13px 0; top:1.8em; bottom:9.4em; left:0; cursor: w-resize;" onClick="prevImage()"></div>
-		<div style="width: 50%; height: 100%; position: absolute; margin:2px 0 13px 0; top:1.8em; bottom:9.4em; right:0; cursor: e-resize;" onClick="nextImage()"></div>
-		<div style="position: absolute; height: 4.8em; bottom: 3.4em; left: 0; right: 0; text-align: center; color: black; font-family: sans-serif; font-size: 1.2em; padding: 5px">
-			<button id="button5" class="button" onClick="setScore(5)">Museum quality</button>
-			<button id="button4" class="button" onClick="setScore(4)">All good</button>
-			<button id="button3" class="button" onClick="setScore(3)">Small mutations</button>
-			<button id="button2" class="button" onClick="setScore(2)">Trash</button>
-			<button id="button1" class="button" onClick="setScore(1)">Interesting fail</button> |
-			<button id="buttonNSFW" class="button" onClick="setScore('nsfw')">NSFW</button>
+		<div id="searchList">
 		</div>
-		<div id="commentDisplay" style="position: absolute; height: 3.4em; bottom: 0; left: 0; right: 0; overflow-y:auto; background-color: rgba(255, 255, 255, 0.6); color: black; font-family: sans-serif; font-size: 1.2em; padding: 5px">artintelligence.gallery</div>
 	</body>
 	<script type="text/javascript">
+		const searchField = document.getElementById("searchField");
+		const selectedArtists = document.getElementById("selectedArtists");
+		const artistList = document.getElementById("artistList");
+		const artistInfo = document.getElementById("artistInfo");
+		const genresList = document.getElementById("genresList");
+		const genreForm = document.getElementById("genreForm");
+		const imageList = document.getElementById("imageList");
+		const searchList = document.getElementById("searchList");
 		const urlParams = new URLSearchParams(location.search);
-		const img = document.getElementById("img");
-		const totalDisplay = document.getElementById("totalDisplay");
-		const commentDisplay = document.getElementById("commentDisplay");
-		const nsfwField = document.getElementById('nsfwField');
-		const scoreField = document.getElementById('scoreField');
-		const searchField = document.getElementById('searchField');
-		const buttonNSFW = document.getElementById("buttonNSFW");
+		var imageReloadTimer = null;
+		var artistButtons = []
 		
-		let isNSFW = false;
-		let currentOffset = 1;
-		let currentJSON = {};
-		if (urlParams.get('offset')) { currentOffset = parseInt(urlParams.get('offset')); }
+		var currentArtistId = null;
+		var currentArtist = null;
+		var currentGenreButtonId = null;
+		var currentArtistGenres = null;
+		var currentArtistGenre = null;
+		var genreList = [];
+		var resultsCols = {
+			'imageListResults': 2,
+			'searchListResults': 2
+		};
+		var artistImageTotal = 0;
 		
-		if (urlParams.get('q')) {
-			searchField.value = urlParams.get('q');
+		function loadArtists() {
+			artistList.innerText = 'Loading...';
+			fetch(`/api/get_artists`, {
+				method: 'GET',
+				headers: { 'Content-Type': 'application/json' }
+			})
+				.then(response => response.json())
+				.then(json => {
+					artistList.innerText = '';
+					for (const i in json.artists) {
+						artist = json.artists[i];
+						liTag = addTag(artistList, {
+							'tag': 'li',
+							'id': artist.id,
+							'data-searchableName': artist.searchable_name,
+							'classList': 'artist',
+							'textContent': artist.sort_name
+						});
+						liTag.addEventListener('click', function(evt) { showArtist(evt.srcElement); });
+					}
+					artistButtons = document.getElementsByClassName('artist');
+					searchArtist();
+					
+					if (urlParams.get('id')) {
+						currentArtistId = urlParams.get('id');
+// 						console.log('currentArtistId: ' + currentArtistId)
+						artistButton = document.getElementById(currentArtistId)
+						if (artistButton) { showArtist(artistButton); }
+					}
+				});
 		}
 		
-		function resetScoreButtons(score) {
-			for (let step = 1; step <= 5; step++) {
-				document.getElementById("button" + step).style.backgroundColor = "#eee";
-			}
-			if (score) {
-				document.getElementById("button" + score).style.backgroundColor = "#999";
-			}
+		function loadGenreList() {
+			fetch(`/api/get_genre_list`, {
+				method: 'GET',
+				headers: { 'Content-Type': 'application/json' }
+			})
+				.then(response => response.json())
+				.then(json => {
+					if (json.genre_list) {
+						genreList = json.genre_list
+						console.log(genreList)
+					}
+				});
 		}
 		
-		function resetToggles() {
-			if (isNSFW) {
-				buttonNSFW.style.backgroundColor = "#999";
-			} else {
-				buttonNSFW.style.backgroundColor = "#eee";
+		function searchArtist(event) {
+			if (searchField.value.length == 0) {
+				let cnt = 0;
+				for (let button of artistButtons) {
+					button.style.display = 'list-item';
+					cnt++;
+				}
+				selectedArtists.innerText = cnt
+				return
 			}
-		}
-		
-		function setScore(score) {
-			console.log("Score as " + score)
-			if (score == 'nsfw') {
-				if (isNSFW) { isNSFW = false; }
-				else { isNSFW = true; }
-				score = null
-				resetToggles()
-			} else {
-				resetScoreButtons(score);
-			}
-			console.log(currentJSON.filename + ' ' + currentJSON.create_time)
-			var data = {
-				"filename": currentJSON.filename,
-				"create_time": currentJSON.create_time,
-				"nsfw": isNSFW
-			}
-			if (score) { data['score'] = score; }
 			
-			fetch(`/api/set_score`, {
-				method: 'PUT',
+			let cnt = 0;
+			var search = new RegExp(searchField.value, "i");
+			for (let button of artistButtons) {
+				if (search.test(button.dataset.searchableName)) {
+					button.style.display = 'list-item';
+					cnt++;
+				} else {
+					button.style.display = 'none';
+				}
+			}
+			selectedArtists.innerText = cnt
+		}
+		
+		function showArtist(artistButton) {
+			artistId = artistButton.id
+			console.log(currentArtistId)
+			console.log(artistId)
+			console.log(artistButton)
+			if (currentArtistId) {
+				document.getElementById(currentArtistId).style.backgroundColor = "#eee";
+			}
+			currentArtistId = artistButton.id
+			artistButton.style.backgroundColor = "#ccc";
+			artistInfo.innerText = 'Loading...';
+			imageList.innerText = 'Loading...';
+			searchList.innerText = 'Loading...';
+			clearGenreForm();
+			var urlObj = new URL(window.location.href);
+			urlObj.searchParams.set('id', currentArtistId);
+			window.history.replaceState(null, '', urlObj.href);
+			
+			// So artist info
+			var data = {
+				"artist_id": artistId
+			}
+			fetch(`/api/get_artist`, {
+				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(data)
 			})
 				.then(response => response.json())
 				.then(json => {
-					console.log('/api/set_score');
+					console.log('/api/get_artist');
 					console.log(json);
+					artistInfo.innerText = '';
+					if (json && json.artist) {
+						currentArtist = json.artist
+						addTags(artistInfo, [{
+							'custom': 'externalLinkButton',
+							'link': 'https://duckduckgo.com/?q='+json.artist.name+' artist bio'
+						}]);
+						if (json.artist.external_url) {
+							htags = addTags(artistInfo, [{
+								'tag': 'h3',
+								'children': [{
+									'tag': 'a',
+									'target': '_blank',
+									'href': json.artist.external_url,
+									'classList': 'external',
+									'innerText': json.artist.name
+								}]
+							}]);
+							if (json.artist.country) {
+								addTag(htags[0], {
+									'tag': 'span',
+									'innerText': ' - ' + json.artist.country
+								})
+							}
+						} else if (json.artist.name) {
+							htags = addTags(artistInfo, [{
+								'tag': 'h3',
+								'children': [{
+									'tag': 'span',
+									'innerText': json.artist.name
+								}]
+							}]);
+							if (json.artist.country) {
+								addTag(htags[0], {
+									'tag': 'span',
+									'innerText': ' - ' + json.artist.country
+								})
+							}
+						}
+						if (json.artist.bio) {
+							addTags(artistInfo, [{
+								'tag': 'div',
+								'innerText': json.artist.bio
+							}]);
+						}
+					}
 				});
+			
+			// Show genres
+			loadGenres(currentArtistId);
+			showArtistImages(true);
+			showSearchResults();
 		}
 		
-		function prevImage() {
-			show(currentOffset - 1)
-		}
-		function nextImage() {
-			show(currentOffset + 1)
-		}
-		
-		function search(event) {
-			console.log(event);
-			if (event.type == 'submit' || event.keyCode === 13) {
-				event.preventDefault();
-				show(1);
+		function showArtistImages(isFreshStart) {
+			let reloadButton = null;
+			if (isFreshStart) {
+				imageList.innerText = 'Loading...';
+				artistImageTotal = 0;
+			} else {
+				reloadButton = document.getElementById('reloadButton');
+				if (reloadButton) {
+					reloadButton.disabled = true;
+					reloadButton.style.cursor = 'default';
+				}
 			}
-		}
-		
-		function show(offset) {
-			commentDisplay.innerText = 'Loading...';
 			
-			var currentSearch = null
-			if (searchField.value) { currentSearch = searchField.value; }
-			
+			// Show artist images
 			var data = {
-				"offset": offset,
-				"search": currentSearch
+				"offset": 1,
+				"artist_id": currentArtistId,
+				"nsfw": false,
+				"limit": 20
 			}
-			if (nsfwField.value == 'only') { data['nsfw'] = true; }
-			else if (nsfwField.value == 'none') { data['nsfw'] = false; }
-			if (scoreField.value == 'noScore') { data['exact_score'] = 'no_score'; }
-			else if (scoreField.value) { data['exact_score'] = scoreField.value; }
-			
 			fetch(`/api/get_latest`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -187,29 +650,525 @@
 			})
 				.then(response => response.json())
 				.then(json => {
-					if (json['images'] && json['images'].length) {
-						console.log(json);
-						totalDisplay.innerText = json.offset + ' / ' + json.total;
-						commentDisplay.innerText = json['images'][0].id + ': ' + json['images'][0].prompt;
-						img.src = `/images/` + json['images'][0].filename;
-						currentJSON = json['images'][0]
-						currentOffset = json.offset;
-						isNSFW = false;
-						if (json['images'][0].nsfw) { isNSFW = true; }
-						resetToggles()
-						resetScoreButtons(json['images'][0].score);
-						var urlObj = new URL(window.location.href);
-						urlObj.searchParams.set('offset', currentOffset);
-						window.history.replaceState(null, '', urlObj.href);
+					console.log('/api/get_latest');
+					console.log(json);
+					if (!isFreshStart && json && json.images && json.images.length) {
+						if ((artistImageTotal > 0) && (artistImageTotal == json.images.length)) {
+							if (reloadButton) {
+								reloadButton.disabled = false;
+								reloadButton.style.cursor = 'pointer';
+							}
+							return;
+						}
+					}
+					window.clearInterval(imageReloadTimer);
+					imageList.innerText = '';
+					if (json && json.images && json.images.length) {
+						artistImageTotal = json.images.length
+						imageList.innerText = '';
+						addTags(imageList, [{
+							'tag': 'div',
+							'id': 'imageListHeader',
+							'children': [{
+								'custom': 'reloadButton',
+								'function': showArtistImages
+							}, {
+								'custom': 'gridButtons',
+								'elementId': 'imageListResults'
+							}, {
+								'tag': 'h4',
+								'children': [{
+									'tag': 'a',
+									'target': '_blank',
+									'href': "/recent.html?artist_id=" + currentArtistId,
+									'classList': 'external',
+									'innerText': "Generated images"
+								}]
+							}]
+						}]);
+						
+						imageListResults = addTag(imageList, {
+							'tag': 'div',
+							'id': 'imageListResults'
+						});
+						setGrid('imageListResults');
+						for (const i in json.images) {
+							image = json.images[i];
+							caption = '';
+							if (image.model) {
+								caption = image.id + ' ' + image.model + ': ' + image.prompt;
+							} else {
+								caption = image.id + ' ' + image.engine_label + ': ' + image.prompt;
+							}
+							addTags(imageListResults, [{
+								'tag': 'figure',
+								'children': [{
+									'tag': 'img',
+									'src': `/images/` + image.filename,
+								}, {
+									'tag': 'figcaption',
+									'innerText': caption
+								}]
+							}]);
+						}
 					} else {
-						totalDisplay.innerText = '0 / 0';
-						commentDisplay.innerText = "No images found";
-						img.src = `/assets/not-found.png`;
+						addTags(imageList, [{
+							'custom': 'reloadButton',
+							'function': showArtistImages
+						}, {
+							'tag': 'div',
+							'innerText': "No images generated for this artist"
+						}]);
 					}
 				});
 		}
 		
-		show(currentOffset);
+		function showSearchResults() {
+			searchList.innerText = 'Loading...';
+			
+			// Show search results
+			var data = {
+				"offset": 1,
+				"artist_id": currentArtistId,
+				"limit": 20
+			}
+			fetch(`/api/get_search_results`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(data)
+			})
+				.then(response => response.json())
+				.then(json => {
+					console.log('/api/get_search_results');
+					console.log(json);
+					searchList.innerText = '';
+					if (json) {
+						searchList.innerText = '';
+						addTags(searchList, [{
+							'tag': 'div',
+							'id': 'imageListHeader',
+							'children': [{
+								'custom': 'gridButtons',
+								'elementId': 'searchListResults'
+							}, {
+								'custom': 'gridButtons',
+								'elementId': 'searchListResults'
+							}, {
+								'tag': 'h4',
+								'children': [{
+									'tag': 'a',
+									'target': '_blank',
+									'href': json.url,
+									'classList': 'external',
+									'innerText': "Search results for " + json.artist.name
+								}]
+							}]
+						}]);
+						
+						searchListResults = addTag(searchList, {
+							'tag': 'div',
+							'id': 'searchListResults',
+							'classList': 'col1'
+						});
+						setGrid('searchListResults');
+						for (const i in json.images) {
+							image = json.images[i];
+							addTags(searchListResults, [{
+								'tag': 'figure',
+								'children': [{
+									'tag': 'img',
+									'src': image.thumbnail
+								}, {
+									'tag': 'figcaption',
+									'innerText': image.title
+								}]
+							}]);
+						}
+					} else {
+						addTags(searchList, [{
+							'tag': 'div',
+							'innerText': "No search results for this artist"
+						}]);
+					}
+				});
+		}
+		
+		function loadGenres(artist_id) {
+			genresList.innerText = 'Loading...';
+			window.clearInterval(imageReloadTimer);
+			
+			var data = {
+				"artist_id": artist_id
+			}
+			fetch('/api/get_genres', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(data)
+			})
+				.then(response => response.json())
+				.then(json => {
+					console.log('/api/get_genres');
+					console.log(json);
+					genresList.innerText = '';
+					currentArtistGenres = json.genres
+					startingGenre = null;
+					for (const i in json.genres) {
+						genre = json.genres[i];
+						liTag = addTag(genresList, {
+							'tag': 'li',
+							'id': genre.artist_id + '-' + genre.name,
+							'textContent': genre.name
+						});
+						liTag.addEventListener('click', function(evt) { showGenre(evt.srcElement); });
+						if (i == 0) { startingGenre = liTag; }
+					}
+					liTag = addTag(genresList, {
+						'tag': 'li',
+						'id': 'genreAddButton',
+						'textContent': 'Add a genre...'
+					});
+					liTag.addEventListener('click', function(evt) { showGenre(evt.srcElement); });
+					if (startingGenre) {
+						showGenre(startingGenre);
+					}
+				});
+		}
+		
+		function showGenre(genreButton) {
+			console.log(genreButton.id);
+			genreButton.style.backgroundColor = "#eee";
+			currentArtistGenre = {};
+			for (const i in currentArtistGenres) {
+				if (genreButton.id == currentArtistGenres[i]['artist_id'] + '-' + currentArtistGenres[i]['name']) {
+					currentArtistGenre = currentArtistGenres[i];
+				}
+			}
+			console.log(currentArtistGenre)
+			if (currentGenreButtonId) {
+				console.log('currentGenreButtonId ' + currentGenreButtonId);
+				document.getElementById(currentGenreButtonId).style.backgroundColor = "#eee";
+			}
+			currentGenreButtonId = genreButton.id;
+			genreButton.style.backgroundColor = "#ccc";
+			document.getElementById('deleteGenreButton').innerText = 'Delete';
+			document.getElementById('deleteGenreButton').disabled = false;
+			document.getElementById('deleteGenreButton').style.cursor = 'pointer';
+			document.getElementById('saveGenreButton').innerText = 'Save';
+			document.getElementById('saveGenreButton').disabled = true;
+			document.getElementById('saveGenreButton').style.cursor = 'default';
+			document.getElementById('generateGenreButton').innerText = 'Generate';
+			document.getElementById('generateGenreButton').disabled = false;
+			document.getElementById('generateGenreButton').style.cursor = 'pointer';
+			fillGenreForm(currentArtistGenre);
+		}
+		
+		function enableGenreForm() {
+			document.getElementById('saveGenreButton').innerText = 'Save';
+			document.getElementById('saveGenreButton').disabled = false;
+			document.getElementById('saveGenreButton').style.cursor = 'pointer';
+			document.getElementById('generateGenreButton').innerText = 'Generate';
+			document.getElementById('generateGenreButton').disabled = true;
+			document.getElementById('generateGenreButton').style.cursor = 'default';
+		}
+		
+		function clearGenreForm() {
+			fillGenreForm({});
+			genreForm.style.display = 'none';
+			currentArtistGenre = null;
+			currentGenreButtonId = null;
+		}
+		
+		function fillGenreForm(data) {
+			fieldNames = ['name', 'methods', 'styles', 'subjects', 'modifiers', 'locations', 'time_period', 'notes'];
+			for (const i in fieldNames) {
+				name = fieldNames[i];
+				input = genreForm.elements[fieldNames[i]];
+				if (data[name]) {
+					if (data[name].constructor === Array) {
+						input.value = data[name].join("\n");
+					} else {
+						input.value = data[name];
+					}
+				} else {
+					input.value = '';
+				}
+			}
+			genreForm.style.display = 'block';
+		}
+		
+		function generateGenre(event) {
+			document.getElementById('generateGenreButton').innerText = 'Generating';
+			document.getElementById('generateGenreButton').disabled = true;
+			document.getElementById('generateGenreButton').style.cursor = 'default';
+			data = {
+				"artist_id": currentArtistGenre['artist_id'],
+				"genre": currentArtistGenre['name']
+			};
+			console.log(JSON.stringify(data));
+			fetch('/api/generate', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(data)
+			})
+				.then(response => response.json())
+				.then(json => {
+					console.log('/api/generate');
+					console.log(json);
+					document.getElementById('generateGenreButton').innerText = 'Generate';
+					document.getElementById('generateGenreButton').disabled = false;
+					document.getElementById('generateGenreButton').style.cursor = 'pointer';
+					window.clearInterval(imageReloadTimer);
+					imageReloadTimer = setInterval(showArtistImages, 5000);
+				});
+			event.preventDefault();
+		}
+		
+		function saveGenre(event) {
+			document.getElementById('saveGenreButton').innerText = 'Saving';
+			document.getElementById('saveGenreButton').disabled = true;
+			document.getElementById('saveGenreButton').style.cursor = 'default';
+			data = {
+				"artist_id": currentArtistGenre['artist_id']
+			};
+			fieldNames = ['name', 'methods', 'styles', 'subjects', 'modifiers', 'locations', 'time_period', 'notes'];
+			for (const i in fieldNames) {
+				name = fieldNames[i];
+				input = genreForm.elements[fieldNames[i]];
+				if (input.nodeName.toLowerCase() == 'textarea') {
+					if (input.value.length) {
+						data[name] = input.value.split(/\n/);
+					} else {
+						data[name] = [];
+					}
+				} else {
+					data[name] = input.value;
+				}
+			}
+			console.log(JSON.stringify(data));
+			fetch('/api/save_genre', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(data)
+			})
+				.then(response => response.json())
+				.then(json => {
+					console.log('/api/save_genre');
+					console.log(json);
+					document.getElementById('saveGenreButton').innerText = 'Saved';
+					loadGenres(currentArtistGenre['artist_id']);
+				});
+			event.preventDefault();
+		}
+		
+		function deleteGenre(event) {
+			document.getElementById('deleteGenreButton').innerText = 'Deleting';
+			document.getElementById('deleteGenreButton').disabled = true;
+			document.getElementById('deleteGenreButton').style.cursor = 'default';
+			console.log(currentArtistGenre);
+			if (currentArtistGenre['artist_id']) {
+				data = {
+					"artist_id": currentArtistGenre['artist_id'],
+					"name": currentArtistGenre['name']
+				};
+				fetch('/api/delete_genre', {
+					method: 'DELETE',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(data)
+				})
+					.then(response => response.json())
+					.then(json => {
+						console.log('/api/delete_genre');
+						console.log(json);
+						document.getElementById('deleteGenreButton').innerText = 'Deleted';
+						loadGenres(currentArtistGenre['artist_id']);
+						clearGenreForm();
+					});
+				console.log(data);
+			} else {
+				clearGenreForm();
+				document.getElementById('genreAddButton').style.backgroundColor = "#eee";
+			}
+			event.preventDefault();
+		}
+		
+		function createAspectRatioExamples() {
+			artistDiv = document.getElementById('artistDiv');
+			aspectRatioExamples = document.getElementById('aspectRatioExamples');
+			fullWidth = artistDiv.offsetWidth * 0.65;
+			ratios = [
+				{ "ratio": 1.78, "name": "landscape-hd" },
+				{ "ratio": 1.5, "name": "landscape-35" },
+				{ "ratio": 1.25, "name": "landscape-full" },
+				{ "ratio": 1, "name": "square" },
+				{ "ratio": 0.8, "name": "portrait-full" },
+				{ "ratio": 0.67, "name": "portrait-35" },
+				{ "ratio": 0.56, "name": "portrait-hd" }
+			];
+			totalWidth = ratios.length * 0.25;
+			for (const i in ratios) {
+				ratio = ratios[i];
+				ratio['height'] = Math.sqrt(100 / ratio['ratio']);
+				ratio['width'] = ratio['height'] * ratio['ratio'];
+				totalWidth += ratio['width'];
+			}
+			scale = fullWidth / totalWidth;
+			for (const i in ratios) {
+				if (i != 0) {
+					spacer = document.createElement('div');
+					aspectRatioExamples.appendChild(spacer);
+					spacer.classList.add('aspectRatioSpacer');
+					spacer.style.width = Math.round(2.5 * scale) + "px";
+				}
+				let ratio = ratios[i];
+				width = Math.round(ratio['width'] * scale);
+				height = Math.round(ratio['height'] * scale);
+				example = document.createElement('div');
+				aspectRatioExamples.appendChild(example);
+				example.classList.add('aspectRatioExample');
+				example.style.width = width + "px";
+				example.style.height = height + "px";
+				example.innerText = ratio['ratio'];
+				example.addEventListener('click', function(evt) { addToField('aspect_ratios', ratio['name']); });
+			}
+		}
+		function addToField(fieldName, source) {
+			value = source;
+			if (typeof source !== 'string') {
+				value = source.srcElement.value;
+				source.srcElement.value = '';
+			}
+			if (fieldName == 'subjects') {
+				genreForm.elements[fieldName].value = "!Generate a list of 20 descriptions of content of " + value + " by " + currentArtist['name'] + "."
+				enableGenreForm();
+				return;
+			}
+			lines = genreForm.elements[fieldName].value.split('\n');
+			values = {}
+			keys = []
+			wasAdded = false;
+			const regex = new RegExp(':');
+			for (const i in lines) {
+				line = lines[i];
+				let weight = 1;
+				let name = line;
+				if (regex.test(line)) {
+					parts = line.split(':');
+					weight = parseInt(parts[0]);
+					name = parts[1];
+				}
+				if (!name) {
+					continue;
+				}
+				console.log("weight: " + weight);
+				console.log("name: " + name);
+				if (name == value) {
+					wasAdded = true;
+					weight++;
+				}
+				values[name] = weight;
+				keys.push(name);
+			}
+			if (!wasAdded) {
+				values[value] = 1;
+				keys.push(value);
+			}
+			genreForm.elements[fieldName].value = "";
+			keys.sort();
+			for (const i in keys) {
+				key = keys[i];
+				if (i != 0) {
+					genreForm.elements[fieldName].value += "\n";
+				}
+				genreForm.elements[fieldName].value += values[key] + ':' + key;
+			}
+			enableGenreForm();
+		}
+		
+		function addTags(parent, tags) {
+			let tagsList = []
+			for (const i in tags) {
+				tagsList.push(addTag(parent, tags[i]));
+			}
+			return tagsList;
+		}
+		
+		function addTag(parent, attr) {
+			if (attr['custom'] == 'reloadButton') {
+				attr['id'] = 'reloadButton';
+				attr['tag'] = 'button';
+				attr['classList'] = 'leftCornerButton';
+				attr['innerHTML'] = '&#x21bb;';
+			}
+			else if (attr['custom'] == 'externalLinkButton') {
+				attr['tag'] = 'button';
+				attr['classList'] = 'rightCornerButton';
+				attr['innerHTML'] = '&#x2197;';
+				attr['function'] = openLink;
+				attr['function_arg'] = attr['link'];
+			}
+			else if (attr['custom'] == 'gridButtons') {
+				let gridButtons = addTag(parent, {
+					'tag': 'div',
+					'classList': 'gridButtons'
+				});
+				gridButtons.classList.add('col1');
+				for (let i = 1; i <= 4; i++) {
+					let gridButton = addTag(gridButtons, {
+						'tag': 'button',
+						'textContent': i
+					});
+					gridButton.addEventListener('click', function() { setGrid(attr['elementId'], i); });
+				};
+				return gridButtons;
+			}
+			
+			let tag = document.createElement(attr['tag']);
+			parent.appendChild(tag);
+			for (const attr_name in attr) {
+				if (attr_name == 'tag') {
+					continue;
+				} else if (attr_name == 'function') {
+					tag.addEventListener('click', function() { attr['function'](attr['function_arg']); });
+				} else if (attr_name == 'children') {
+					addTags(tag, attr['children']);
+				} else if (attr_name == 'classList') {
+					tag.classList.add(attr['classList']);
+				} else if (/^data\-/.test(attr_name)) {
+					let datasetName = attr_name.replace(/^data\-/, '');
+					tag.dataset[datasetName] = attr[attr_name];
+				} else if (attr_name == 'name') {
+					tag.name = attr['name'];
+				} else if (attr_name == 'innerHTML') {
+					tag.innerHTML = attr['innerHTML'];
+				} else if (attr_name == 'innerText') {
+					tag.innerText = attr['innerText'];
+				} else if (attr_name == 'textContent') {
+					tag.textContent = attr['textContent'];
+				} else {
+					tag.setAttribute(attr_name, attr[attr_name]);
+				}
+			}
+			return tag;
+		}
+		
+		function openLink(url) {
+			window.open(url, "_blank");
+		}
+		
+		function setGrid(elementId, size) {
+			element = document.getElementById(elementId);
+			if (size) {
+				resultsCols[elementId] = size;
+			} else {
+				size = resultsCols[elementId];
+			}
+			element.removeAttribute("class");
+			element.classList.add("col" + size);
+		}
+		
+// 		createAspectRatioExamples();
+		loadArtists();
 		
 	</script>
 </html>
+

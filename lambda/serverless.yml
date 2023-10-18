@@ -39,6 +39,7 @@ functions:
       - ${cf:moses-common-${sls:stage}.LayerExport}
   generator:
     handler: generator.handler
+    timeout: 180
     layers:
       - ${cf:moses-common-${sls:stage}.LayerExport}
 

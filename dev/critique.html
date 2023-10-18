@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>ARTificial INTELLIGENCE - Art by AI</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="AI generated art for AI generated descriptions of art.">
+		<meta name="keywords" content="AI, artificial intelligence, art, illustrations, painting">
+		<meta name="generator" content="handmade">
+	
+		<link rel="apple-touch-icon" sizes="57x57" href="/assets/apple-icon-57x57.png">
+		<link rel="apple-touch-icon" sizes="60x60" href="/assets/apple-icon-60x60.png">
+		<link rel="apple-touch-icon" sizes="72x72" href="/assets/apple-icon-72x72.png">
+		<link rel="apple-touch-icon" sizes="76x76" href="/assets/apple-icon-76x76.png">
+		<link rel="apple-touch-icon" sizes="114x114" href="/assets/apple-icon-114x114.png">
+		<link rel="apple-touch-icon" sizes="120x120" href="/assets/apple-icon-120x120.png">
+		<link rel="apple-touch-icon" sizes="144x144" href="/assets/apple-icon-144x144.png">
+		<link rel="apple-touch-icon" sizes="152x152" href="/assets/apple-icon-152x152.png">
+		<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-icon-180x180.png">
+		<link rel="icon" type="image/png" sizes="192x192"  href="/assets/android-icon-192x192.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon-96x96.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+		<link rel="manifest" href="/manifest.json">
+		<meta name="msapplication-TileColor" content="#da532c">
+		<meta name="theme-color" content="#ffffff">
+	<!-- 
+		<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#000000">
+	 -->
+		<meta name="apple-mobile-web-app-title" content="ART Int">
+		<meta name="application-name" content="ART Int">
+		<style>
+			.button {
+				border: none;
+				border-radius: 20px;
+				padding: 10px 20px;
+				width: 200px;
+				height: 3.6em;
+				margin: 10px;
+				background-color: rgba(255, 255, 255, 0.6);
+				font-family: sans-serif;
+				font-size: 1.0em;
+				text-align: center;
+				cursor: pointer;
+			}
+			.button:hover {
+				background-color: #ddd;
+			}
+		</style>
+	</head>
+	<body style="margin: 0; padding: 0; background-color: black;">
+		<div id="search_pane" style="position: absolute; height: 1.2em; top: 0; left: 0; right: 0; background-color: rgba(255, 255, 255, 0.2); color: white; font-family: sans-serif; font-size: 1.0em; text-align:center; padding: 5px">
+			<form id="searchForm" onsubmit="search(event)" style="text-size:1.0em">
+				<span id="totalDisplay" style="display:inline-block; width:10%"></span>
+				<label for="nsfwField">NSFW</label>
+				<select id="nsfwField" onchange="show(1)">
+					<option value="">-</option>
+					<option value="none">None</option>
+					<option value="only">Only</option>
+				</select>
+				<label for="scoreField">Score</label>
+				<select id="scoreField" onchange="show(1)">
+					<option value="">-</option>
+					<option value="noScore">No score</option>
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+				</select>
+				<input type="text" id="searchField" onkeydown="return search(event)" style="width:20%">
+				<button type="submit">Search</button>
+			</form>
+		</div>
+		<div style="width: 100%; position: absolute; margin:2px 0 13px 0; top:1.8em; bottom:9.4em; left:0; right:0;">
+			<img id="img" style="height: 100%; width: 100%; object-fit: contain; position: relative; margin:auto;" />
+		</div>
+		<div style="width: 50%; position: absolute; margin:2px 0 13px 0; top:1.8em; bottom:9.4em; left:0; cursor: w-resize;" onClick="prevImage()"></div>
+		<div style="width: 50%; position: absolute; margin:2px 0 13px 0; top:1.8em; bottom:9.4em; right:0; cursor: e-resize;" onClick="nextImage()"></div>
+		<div style="position: absolute; height: 4.8em; bottom: 3.4em; left: 0; right: 0; text-align: center; color: black; font-family: sans-serif; font-size: 1.2em; padding: 5px">
+			<button id="button5" class="button" onClick="setScore(5)">Museum quality</button>
+			<button id="button4" class="button" onClick="setScore(4)">All good</button>
+			<button id="button3" class="button" onClick="setScore(3)">Small mutations</button>
+			<button id="button2" class="button" onClick="setScore(2)">Trash</button>
+			<button id="button1" class="button" onClick="setScore(1)">Interesting fail</button> |
+			<button id="buttonNSFW" class="button" onClick="setScore('nsfw')">NSFW</button>
+		</div>
+		<div id="commentDisplay" style="position: absolute; height: 3.4em; bottom: 0; left: 0; right: 4.2em; overflow-y:auto; background-color: rgba(255, 255, 255, 0.6); color: black; font-family: sans-serif; font-size: 1.2em; padding: 5px">artintelligence.gallery</div>
+		<div style="position: absolute; height: 3.3em; bottom: 0; width: 4.6em; right: 0; padding: 8px;">
+			<a id="buttonDownload" class="button" href="" style="height: 1.8em; width: 1.8em; font-size: 36px; text-decoration:none;">&#x2913;</a>
+		</div>
+	</body>
+	<script type="text/javascript">
+		const urlParams = new URLSearchParams(location.search);
+		const img = document.getElementById("img");
+		const totalDisplay = document.getElementById("totalDisplay");
+		const commentDisplay = document.getElementById("commentDisplay");
+		const nsfwField = document.getElementById('nsfwField');
+		const scoreField = document.getElementById('scoreField');
+		const searchField = document.getElementById('searchField');
+		const buttonNSFW = document.getElementById("buttonNSFW");
+		const buttonDownload = document.getElementById("buttonDownload");
+		
+		let isNSFW = false;
+		let currentOffset = 1;
+		let currentJSON = {};
+		if (urlParams.get('offset')) { currentOffset = parseInt(urlParams.get('offset')); }
+		
+		if (urlParams.get('q')) {
+			searchField.value = urlParams.get('q');
+		}
+		
+		function resetScoreButtons(score) {
+			for (let step = 1; step <= 5; step++) {
+				document.getElementById("button" + step).style.backgroundColor = "#eee";
+			}
+			if (score) {
+				document.getElementById("button" + score).style.backgroundColor = "#999";
+			}
+		}
+		
+		function resetToggles() {
+			if (isNSFW) {
+				buttonNSFW.style.backgroundColor = "#999";
+			} else {
+				buttonNSFW.style.backgroundColor = "#eee";
+			}
+		}
+		
+		function setScore(score) {
+			console.log("Score as " + score)
+			if (score == 'nsfw') {
+				if (isNSFW) { isNSFW = false; }
+				else { isNSFW = true; }
+				score = null
+				resetToggles()
+			} else {
+				resetScoreButtons(score);
+			}
+			console.log(currentJSON.filename + ' ' + currentJSON.create_time)
+			var data = {
+				"filename": currentJSON.filename,
+				"create_time": currentJSON.create_time,
+				"nsfw": isNSFW
+			}
+			if (score) { data['score'] = score; }
+			
+			fetch(`/api/set_score`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(data)
+			})
+				.then(response => response.json())
+				.then(json => {
+					console.log('/api/set_score');
+					console.log(json);
+				});
+		}
+		
+		function prevImage() {
+			show(currentOffset - 1)
+		}
+		function nextImage() {
+			show(currentOffset + 1)
+		}
+		
+		function search(event) {
+			console.log(event);
+			if (event.type == 'submit' || event.keyCode === 13) {
+				event.preventDefault();
+				show(1);
+			}
+		}
+		
+		function show(offset) {
+			commentDisplay.innerText = 'Loading...';
+			
+			var currentSearch = null
+			if (searchField.value) { currentSearch = searchField.value; }
+			
+			var data = {
+				"offset": offset,
+				"search": currentSearch
+			}
+			if (nsfwField.value == 'only') { data['nsfw'] = true; }
+			else if (nsfwField.value == 'none') { data['nsfw'] = false; }
+			if (scoreField.value == 'noScore') { data['exact_score'] = 'no_score'; }
+			else if (scoreField.value) { data['exact_score'] = scoreField.value; }
+			
+			fetch(`/api/get_latest`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(data)
+			})
+				.then(response => response.json())
+				.then(json => {
+					if (json['images'] && json['images'].length) {
+						console.log(json);
+						totalDisplay.innerText = json.offset + ' / ' + json.total;
+						image = json['images'][0]
+						if (image.model) {
+							commentDisplay.innerText = image.id + ' ' + image.model + ': ' + image.prompt;
+						} else {
+							commentDisplay.innerText = image.id + ' ' + image.engine_label + ': ' + image.prompt;
+						}
+
+						img.src = `/images/` + image.filename;
+						currentJSON = image
+						currentOffset = json.offset;
+						isNSFW = false;
+						if (image.nsfw) { isNSFW = true; }
+						resetToggles()
+						resetScoreButtons(image.score);
+						buttonDownload.href = img.src;
+						var urlObj = new URL(window.location.href);
+						urlObj.searchParams.set('offset', currentOffset);
+						window.history.replaceState(null, '', urlObj.href);
+					} else {
+						totalDisplay.innerText = '0 / 0';
+						commentDisplay.innerText = "No images found";
+						img.src = `/assets/not-found.png`;
+					}
+				});
+		}
+		
+		show(currentOffset);
+		
+	</script>
+</html>

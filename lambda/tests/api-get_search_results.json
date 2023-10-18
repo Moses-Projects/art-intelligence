@@ -2,7 +2,7 @@
 	"method": "POST",
 	"path": "/get_search_results",
 	"body": {
-		"artist": "David Aja",
+		"artist_id": "andreas_achenbach",
 		"limit": 2
 	}
 }

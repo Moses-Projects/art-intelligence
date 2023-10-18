@@ -1,8 +1,8 @@
 {
 	"method": "POST",
-	"path": "/get_artist",
+	"path": "/get_latest",
 	"body": {
 		"artist_id": "andreas_achenbach",
-		"limit": 3
+		"offset": 1
 	}
 }

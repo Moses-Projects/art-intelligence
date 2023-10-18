@@ -10,14 +10,13 @@ import sys
 sys.path.append('/opt')
 
 import moses_common.__init__ as common
-import moses_common.api_gateway
+import moses_common.collective
 import moses_common.dynamodb
 import moses_common.s3
 import moses_common.secrets_manager
 import moses_common.sinkinai
 import moses_common.stabilityai
 import moses_common.ui
-import moses_common.visual_artists as visual_artists
 
 
 ui = moses_common.ui.Interface(use_slack_format=True, usage_message="""
@@ -41,43 +40,17 @@ dry_run = False
 secret = moses_common.secrets_manager.Secret('artintelligence.gallery/api_keys')
 api_keys = secret.get_value()
 
-artist_list_location = '/tmp'
-if common.is_local():
-	artist_list_location=os.environ['HOME']
-collective = visual_artists.Collective(artist_list_location=artist_list_location, log_level=log_level, dry_run=dry_run)
+collective = moses_common.collective.Collective(openai_api_key=api_keys['OPENAI_API_KEY'], log_level=log_level, dry_run=dry_run)
 
 
 def handler(event, context):
-	api = moses_common.api_gateway.Request(event, log_level=log_level, dry_run=dry_run)
+	success, output = generate(event)
 	
-	path = api.parse_path()
-	
-	method = api.method
-	
-	query, metadata = api.process_query()
-	body = api.body
-	
-	output = {}
-	if len(path) >= 1:
-		action = path.pop(0)
-		if action == 'generate':
-			if method == 'POST':
-				output = generate(event)
-				if type(output) is str:
-					output = { "status": 503, "error": output }
-			else:
-				output = { "status": 405, "error": "Method not allowed" }
-		else:
-			return { "statusCode": 500, "body": "Invalid API" }
-	else:
-		return { "statusCode": 500, "body": "Invalid API" }
-	
-	
-	if type(output) is dict and 'status' in output and 'error' in output:
-		print("ERROR: {} - {}".format(output['status'], output['error']))
+	if not success:
+		ui.error(output)
 		return {
-			"statusCode": output['status'],
-			"body": output['error']
+			"statusCode": 404,
+			"body": output
 		}
 	
 	if type(output) is list:
@@ -96,18 +69,18 @@ def handler(event, context):
 
 
 def generate(event):
-	# Get artist
-	artist = collective.get_artist(event.get('artist'))
-	if not artist:
-		# Get subject
-		subject = collective.choose_subject()
-		print("subject {}: {}".format(type(subject), subject))
-		
-		artist = collective.choose_artist(subject)
-	print(f"{artist.name}: {artist.categories}")
+	print("event {}: {}".format(type(event), event))
+	# Choose genre
+	genre = collective.get_random_work(artist_name = event.get('artist'), genre_name = event.get('genre'))
+	print("genre {}: {}".format(type(genre), genre))
+	if not genre:
+		return False, "Artist or genre not found"
+	
+	print(f"{genre.artist.name}: {genre.name}")
 	
 	# Get prompt
-	prompt = get_prompt(artist)
+	prompt = genre.get_prompt()
+	print("prompt {}: {}".format(type(prompt), prompt))
 	
 	# Get image config
 	data = get_image(prompt)
@@ -115,27 +88,15 @@ def generate(event):
 		return data
 	
 	# Send to Art Intelligence bucket and db
-	data['query']['model'] = artist.full_model
 	success = send_image(data)
 	
-	return data
-
-
-
-def get_prompt(artist, subject=None):
-	query = artist.get_query(subject)
-	
-	prompt = visual_artists.Prompt(query, log_level=log_level, dry_run=dry_run)
-	prompt.generate(api_keys['OPENAI_API_KEY'])
-	return prompt
+	return True, data
 
 
 def get_image(prompt):
-	neg_prompt = prompt.get_negative_prompt('sinkin')
-	
 	filename_prefix = None
-	if prompt.data and 'query' in prompt.data and 'artist' in prompt.data['query']:
-		filename_prefix = common.convert_to_snakecase(common.normalize(prompt.data['query']['artist']))
+	if 'query' in prompt and 'artist_id' in prompt['query']:
+		filename_prefix = prompt['query']['artist_id']
 	
 	# Set save directory
 	save_directory = '/tmp'
@@ -143,12 +104,13 @@ def get_image(prompt):
 		save_directory = os.environ.get('HOME') + '/Downloads'
 	
 	success = False
+	model = 'sdxl10'
 	data = "Model not recognized"
-	if re.match(r'sd', prompt.model):
+	if re.match(r'sd', model):
 		# Set up stable diffusion
 		stable_diffusion = moses_common.stabilityai.StableDiffusion(
 			stability_key = api_keys['STABILITY_API_KEY'],
-			model = prompt.model,
+			model = model,
 			save_directory = save_directory,
 			log_level = log_level,
 			dry_run = dry_run
@@ -156,20 +118,21 @@ def get_image(prompt):
 		
 		# Get data for image
 		data = stable_diffusion.text_to_image(
-			prompt.prompt,
-			negative_prompt=neg_prompt,
+			prompt['prompt'],
+			negative_prompt=prompt.get('negative_prompt'),
 # 			seed=opts['seed'],
 # 			steps=opts['steps'],
 # 			cfg_scale=opts['cfg'],
-# 			width=prompt.data['width'],
-# 			height=prompt.data['height'],
+# 			width=prompt['width'],
+# 			height=prompt['height'],
 			filename_prefix=filename_prefix,
 			return_args=True,
-			orientation=prompt.data.get('orientation'),
-			aspect=prompt.data.get('aspect')
+			aspect_ratio=prompt.get('aspect_ratio')
 		)
-		if prompt.data and 'query' in prompt.data:
-			data['query'] = prompt.data['query']
+		
+		# Add further data
+		if prompt and 'query' in prompt:
+			data['query'] = prompt['query']
 		
 		# Generate image
 		success, data = stable_diffusion.text_to_image(data)
@@ -185,9 +148,9 @@ def get_image(prompt):
 		
 		# Get data for image
 		data = sinkinai.text_to_image(
-			prompt.prompt,
-			model=prompt.model,
-			negative_prompt=neg_prompt,
+			prompt['prompt'],
+			model=model,
+			negative_prompt=prompt.get('negative_prompt'),
 # 			seed=opts['seed'],
 # 			steps=opts['steps'],
 # 			cfg_scale=opts['cfg'],
@@ -195,13 +158,13 @@ def get_image(prompt):
 # 			height=prompt.data['height'],
 			filename_prefix=filename_prefix,
 			return_args=True,
-			orientation=prompt.data.get('orientation'),
-			aspect=prompt.data.get('aspect')
+			orientation=prompt.get('orientation'),
+			aspect=prompt.get('aspect')
 		)
 		
 		# Add further data
-		if prompt.data and 'query' in prompt.data:
-			data['query'] = prompt.data['query']
+		if prompt and 'query' in prompt:
+			data['query'] = prompt['query']
 		
 		# Generate image
 		success, data = sinkinai.text_to_image(data)
@@ -227,7 +190,9 @@ def send_image(data):
 	flat_data = common.flatten_hash(data)
 	table = moses_common.dynamodb.Table('artintelligence.gallery-images', log_level=log_level, dry_run=dry_run)
 	table.put_item(flat_data)
+	collective.set_images_update()
 	return True
+
 
 
 if __name__ == '__main__':
@@ -239,6 +204,10 @@ if __name__ == '__main__':
 		"options": [ {
 			"short": "a",
 			"long": "artist",
+			"type": "input"
+		}, {
+			"short": "g",
+			"long": "genre",
 			"type": "input"
 		}, {
 			"short": "l",
@@ -259,14 +228,17 @@ if __name__ == '__main__':
 	collective.log_level = log_level
 	
 	args['artist'] = opts['artist']
-	
-	args["method"] = "POST"
-	args["path"] = "/generate"
+	args['genre'] = opts['genre']
 	
 	response = handler(args, {})
-	ui.pretty(response)
-	data = common.parse_json(response['body'])
-	print("data {}: {}".format(type(data), data))
-	save_directory=os.environ['HOME'] + '/Downloads'
-	os.system(f"open {save_directory}/{data['filename']}")
+	if response['statusCode'] != 200:
+		ui.error(response['body'])
+	elif common.is_json(response['body']):
+		data = common.parse_json(response['body'])
+		ui.pretty(data)
+		if 'filename' in data:
+			save_directory=os.environ['HOME'] + '/Downloads'
+			os.system(f"open {save_directory}/{data['filename']}")
+	else:
+		ui.body(response['body'])
 

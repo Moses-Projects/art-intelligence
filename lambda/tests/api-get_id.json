@@ -1,0 +1,11 @@
+{
+	"method": "POST",
+	"path": "/get/1691583764",
+	"body": {
+		"orientation": "portrait",
+		"version": "3",
+		"score": "4",
+		"nsfw": false,
+		"mode": "sequential"
+	}
+}

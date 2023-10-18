@@ -5,11 +5,15 @@ import os
 import re
 import subprocess
 import sys
+import time
+import wikipedia
 
+from duckduckgo_search import DDGS
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
 import moses_common.__init__ as common
+import moses_common.collective
 import moses_common.dynamodb
 import moses_common.s3
 import moses_common.stabilityai
@@ -48,25 +52,45 @@ def handler(args, opts):
 	if action == 'astats':
 		success, response = get_artist_stats(opts)
 	elif action == 'deploy':
-		subprocess.run(f"aws s3 sync{dry_run_arg} --delete --exclude manage.html s3://artintelligence.gallery/dev s3://artintelligence.gallery/web", shell=True)
+		subprocess.run(f"aws s3 sync{dry_run_arg} --delete --exclude critique.html --exclude manage.html s3://artintelligence.gallery/dev s3://artintelligence.gallery/web", shell=True)
 	elif action == 'engines':
 		success, response = get_engine_list()
 	elif action == 'fail':
 		os.chdir("/Users/tim/Repositories/art-intelligence")
 		subprocess.run(f"aws s3 sync{dry_run_arg} --delete fail s3://artintelligence.gallery/fail", shell=True)
-	elif action == 'import':
-		success, response = import_image(args['file'], opts)
+# 	elif action == 'import':
+# 		success, response = import_image(args['file'], opts)
 	elif action == 'refresh':
 		success, response = refresh_artists(opts)
+	elif action == 'reload':
+		success, response = reload_db(args['target'])
 	elif action == 'send':
 		os.chdir("/Users/tim/Repositories/art-intelligence")
 		subprocess.run(f"aws s3 sync{dry_run_arg} --delete dev s3://artintelligence.gallery/dev", shell=True)
 	elif action == 'stats':
-		success, response = get_image_stats(opts)
+		success, response = get_genre_stats(opts)
 	elif action == 'artist_db':
 		success, response = update_artist_records(opts)
+	elif action == 'new_artist':
+		success, response = new_artist(args, opts)
+	elif action == 'collective_db':
+		success, response = update_collective_records(opts)
+	elif action == 'works_db':
+		success, response = update_work_records(opts)
 	elif action == 'image_db':
 		success, response = update_image_records(opts)
+	elif action == 'search':
+		success, response = search(args, opts)
+	elif action == 'test':
+		success, response = test(opts)
+	elif action == 'update_url':
+		success, response = update_url(args, opts)
+	
+	elif action == 'all_methods':
+		collective = moses_common.collective.Collective(log_level=log_level, dry_run=dry_run)
+		response = collective.get_all_methods()
+		success = True
+	
 	else:
 		response = "Invalid command"
 	
@@ -200,9 +224,9 @@ def fix_image(file):
 		return False, False, "Missing prompt data"	
 	
 	# Add fields
-	should_change = False
+	should_update = False
 	if 'filename' not in record or not record['filename'] or record['filename'] == "None":
-		should_change = True
+		should_update = True
 		record['filename'] = os.path.basename(file)
 	
 	name_record = get_data_from_filename(record['filename'])
@@ -258,7 +282,7 @@ def fix_image(file):
 	
 	# Check for missing fields
 	missing = []
-	required = ['filename', 'create_time', 'engine_label', 'engine_name', 'prompt', 'seed', 'steps', 'cfg_scale', 'width', 'height', 'negative_prompt', 'query-artist', 'query-model', 'query', 'orientation', 'aspect']
+	required = ['filename', 'create_time', 'engine_label', 'engine_name', 'prompt', 'seed', 'steps', 'cfg_scale', 'width', 'height', 'negative_prompt', 'orientation', 'aspect']
 	if record['engine_name'] == 'sinkin':
 		required = required + ['model', 'model_id']
 	for field in required:
@@ -280,13 +304,13 @@ def fix_image(file):
 	if record['engine_name'] == 'sinkin':
 		artist = collective.get_artist(record['query-artist'])
 		if record['query-model'] != artist.checkpoint:
-			should_change = True
+			should_update = True
 			ui.body(f"  query-model is '{record['query-model']}' but should be '{artist.checkpoint}'")
 			record['query-model'] = artist.checkpoint
 	
 	
 	# Update file
-	if should_change:
+	if should_update:
 		ui.body("  Updating image data...")
 		image.save(file, pnginfo=get_png_info(record))
 		return True, True, record
@@ -310,9 +334,9 @@ def get_data_from_filename(file):
 	record["engine_label"] = "sinkin.ai"
 	record["engine_name"] = "sinkin"
 	
-	if re.match(r'sd', part[1]):
-		record["engine_label"] = get_full_model_name(part[1])
-		record["engine_name"] = part[1]
+	if re.match(r'sd', parts[1]):
+		record["engine_label"] = get_full_model_name(parts[1])
+		record["engine_name"] = parts[1]
 	elif parts[1] == 'dalle':
 		record["engine_label"] = "DALL·E"
 		record["engine_name"] = "dalle"
@@ -334,6 +358,36 @@ def refresh_artists(opts):
 	
 	return True, "Updates: " + ui.format_text(updated_cnt, 'bold')
 
+def reload_db(target):
+	collective = moses_common.collective.Collective(log_level=log_level, dry_run=dry_run)
+	if target in ['artist', 'artists']:
+		collective.set_artists_update()
+		return True, f"Set {target} to reload"
+	elif target in ['genre', 'genres', 'work', 'works']:
+		collective.set_genres_update()
+		return True, f"Set {target} to reload"
+	elif target in ['image', 'images']:
+		collective.set_images_update()
+		return True, f"Set {target} to reload"
+	return False, "Unknown target db"
+
+def get_genre_stats(opts):
+	genre_table = moses_common.dynamodb.Table('artintelligence.gallery-works', log_level=log_level, dry_run=dry_run)
+	genre_records = genre_table.get_keys()
+	
+	stats = {}
+	for genre in genre_records:
+		if genre['name'] not in stats:
+			stats[genre['name']] = 1
+		else:
+			stats[genre['name']] += 1
+	
+	sorted_genres = sorted(stats.keys())
+	genre_list = []
+	for genre in sorted_genres:
+		genre_list.append(f"{stats[genre]}:{genre}")
+	return True, genre_list
+
 
 def get_image_stats(opts):
 	image_table = moses_common.dynamodb.Table('artintelligence.gallery-images', log_level=log_level, dry_run=dry_run)
@@ -352,7 +406,7 @@ def get_image_stats(opts):
 
 
 def update_artist_records(opts):
-	table = moses_common.dynamodb.Table('artintelligence.gallery-artists')
+	table = moses_common.dynamodb.Table('artintelligence.gallery-artists', log_level=log_level, dry_run=dry_run)
 	records = table.scan()
 	
 	cnt = 0
@@ -362,7 +416,7 @@ def update_artist_records(opts):
 		if opts['limit'] and opts['limit'] <= cnt:
 			break
 		cnt += 1
-		should_change = False
+		should_update = False
 		ui.header(record['id'])
 		updated_record = {
 			"id": record['id']
@@ -373,57 +427,482 @@ def update_artist_records(opts):
 		
 		if 'preferred_model' not in record:
 			updated_record['preferred_model'] = 'sdxl'
-			should_change = True
+			should_update = True
 		
 		# End manipulate record
 		
 		
-		if should_change:
+		if should_update:
 			table.update_item(updated_record)
 			ui.body("  Updated")
 			updated_cnt += 1
 	
 	return True, "  Updates: " + ui.format_text(updated_cnt, 'bold')
 
+def new_artist(args, opts):
+	collective = moses_common.collective.Collective(log_level=log_level, dry_run=dry_run)
+	artist_table = moses_common.dynamodb.Table('artintelligence.gallery-collective', log_level=log_level, dry_run=dry_run)
+	
+	if 'target' not in args:
+		return False, "Artist name required"
+	
+	artist_name = args['target']
+	artist_id = common.convert_to_snakecase(common.normalize(artist_name, strip_single_chars=False))
+	ui.header(artist_id)
+	names = artist_name.split(r' ')
+	sort_name = names.pop()
+	if len(names):
+		sort_name += ', ' + ' '.join(names)
+	
+	dt = common.get_dt_now()
+	new_artist_record = {
+		"id": artist_id,
+		"bio": "",
+		"born": "",
+		"country": "",
+		"create_time": common.convert_datetime_to_string(dt),
+		"died": "",
+		"external_url": "",
+		"name": artist_name,
+		"sort_name": sort_name,
+		"update_time": common.convert_datetime_to_string(dt)
+	}
+	artist = moses_common.collective.Artist(collective, new_artist_record, log_level=log_level, dry_run=dry_run)
+	
+	new_work_record = {
+		"artist_id": artist_id,
+		"name": "default",
+		"create_time": common.convert_datetime_to_string(dt),
+		"update_time": common.convert_datetime_to_string(dt),
+		"aspect_ratios": [],
+		"locations": [],
+		"methods": [],
+		"modifiers": [],
+		"style": [],
+		"subjects": [],
+		"time_period": None
+	}
+	genre = moses_common.collective.Genre(artist, new_work_record, log_level=log_level, dry_run=dry_run)
+
+	artist_table.put_item(new_artist_record)
+	collective.set_artists_update()
+	
+	genre.save()
+	return True, "Added artist and work"
+
+
+def update_collective_records(opts):
+	table = moses_common.dynamodb.Table('artintelligence.gallery-collective', log_level=log_level, dry_run=dry_run)
+	artists = table.scan()
+	
+	cnt = 0
+	updated_cnt = 0
+	total = len(artists)
+	for artist in artists:
+		if 'wikipedia_url' not in artist:
+			print(f"Skipping {artist['id']}")
+			continue
+		if opts['limit'] and common.convert_to_int(opts['limit']) <= cnt:
+			break
+		cnt += 1
+		should_update = False
+		ui.header(artist['id'])
+		
+		
+		
+		
+		# Start manipulate record
+		dt = common.get_dt_now()
+		
+		new_record = {
+			"update_time": common.convert_datetime_to_string(dt),
+			
+			"id": artist['id']
+		}
+# 		ui.pretty(new_record)
+# 		print("artist.categories {}: {}".format(type(artist.categories), artist.categories))
+		
+		# End manipulate record
+		
+		
+		
+		
+		table.update_item(new_record, ['wikipedia_summary', 'wikipedia_title', 'wikipedia_url'])
+		ui.body("  Updated")
+		updated_cnt += 1
+	
+	if updated_cnt:
+		collective.set_artists_update()
+	return True, "  Updates: " + ui.format_text(updated_cnt, 'bold')
+
+
+def update_work_records(opts):
+	collective = moses_common.collective.Collective(log_level=log_level, dry_run=dry_run)
+	
+	table = moses_common.dynamodb.Table('artintelligence.gallery-works', log_level=log_level, dry_run=dry_run)
+	works = table.scan()
+	
+	cnt = 0
+	inserted_cnt = 0
+	updated_cnt = 0
+	deleted_cnt = 0
+	total = len(works)
+	for work in works:
+		if opts['limit'] and common.convert_to_int(opts['limit']) <= cnt:
+			break
+		should_insert = False
+		should_update = False
+		should_delete = False
+		dt = common.get_dt_now()
+		insert_record = work.copy()
+		insert_record['create_time'] = common.convert_datetime_to_string(dt)
+		insert_record['update_time'] = common.convert_datetime_to_string(dt)
+		update_record = {
+			"update_time": common.convert_datetime_to_string(dt),
+			"artist_id": work['artist_id'],
+			"name": work['name']
+		}
+		delete_record = {
+			"artist_id": work['artist_id'],
+			"name": work['name']
+		}
+		
+		
+		
+		# Filter
+		if work['name'] in ['expressionist', 'abstract']:
+			continue
+		json = common.make_json(work['styles'])
+		if not re.search(r'cubism', json, re.IGNORECASE):
+			continue
+		
+		cnt += 1
+		ui.header(work['artist_id'] + ' - ' + work['name'])
+# 		print("work['methods'] {}: {}".format(type(work['methods']), work['methods']))
+		print("json {}: {}".format(type(json), json))
+		
+		# Start manipulate record
+		artist = collective.get_artist_by_id(work['artist_id'])
+		method_map = {
+			"acrylic painting": "paintings",
+			"aquatint print": "prints",
+			"chalk drawing": "drawings",
+			"charcoal drawing": "drawings",
+			"collage": "collages",
+			"concept art": "art",
+			"digital picture": "pictures",
+			"engraving": "engravings",
+			"fresco": "frescos",
+			"frieze": "friezes",
+			"glass sculpture": "sculptures",
+			"gouache painting": "paintings",
+			"illustration": "illustrations",
+			"linocut": "linocuts",
+			"lithograph": "lithographs",
+			"marble sculpture": "sculptures",
+			"oil painting": "paintings",
+			"painting": "paintings",
+			"pastel": "paintings",
+			"pen and ink drawing": "drawings",
+			"pencil drawing": "drawings",
+			"pencil sketch": "sketches",
+			"photograph": "photographs",
+			"print illustration": "illustrations",
+			"screen print": "prints",
+			"sculpture": "sculptures",
+			"tempera painting": "paintings",
+			"watercolor painting": "paintings",
+			"woodblock print": "prints",
+			"woodcut": "woodcuts"
+		}
+		
+		# For updating subjects to GPT
+		methods = []
+		for method in work['methods']:
+			method = re.sub(r'^\d:', '', method)
+			if method not in method_map:
+				ui.warning(f"{method} not in list")
+				continue
+			methods.append(method_map[method])
+		method_string = ' and '.join(methods)
+		update_record['subjects'] = [
+			f"!Generate a list of 20 descriptions of content of {method_string} by {artist.name}."
+		]
+		print("update_record['subjects'] {}: {}".format(type(update_record['subjects']), update_record['subjects']))
+		should_update = True
+		
+# 		styles = []
+# 		for style in work['styles']:
+# 			if re.match(r'\b(author|Blizzard|Marvel|DC Comics|game art|Hearthstone|Watchmen)\b', style, re.IGNORECASE):
+# 				continue
+# 			styles.append(style)
+# 		
+# 		update_record['styles'] = ['1:' + ', '.join(styles)]
+# 		print("update_record['styles'] {}: {}".format(type(update_record['styles']), update_record['styles']))
+# 		should_update = True
+		if dry_run:
+			continue
+		
+# 		update_record['methods'] = []
+# 		for method in work['methods']:
+# 			if method == '1:ink drawing':
+# 				update_record['methods'].append('1:pen and ink drawing')
+# 				should_update = True
+# 			else:
+# 				update_record['methods'].append(method)
+				
+# 		if work['name'] == 'default':
+# 			do_insert = True
+# 			for work2 in works:
+# 				if work2['artist_id'] == work['artist_id'] and work2['name'] != 'default':
+# 					do_insert = False
+# 			if do_insert:
+# 				inserted_cnt['name'] = 'comic book'
+# 				inserted_cnt['locations'] = []
+# 				should_insert = True
+# 			
+# 			table.delete_item(update_record['artist_id'], update_record['name'])
+# 			should_delete = True
+		
+		# End manipulate record
+		
+		
+		
+		
+		if should_insert:
+			ui.pretty(insert_record)
+			table.put_item(insert_record)
+			ui.body("  Inserted")
+			inserted_cnt += 1
+			time.sleep(1)
+		if should_update:
+			ui.pretty(update_record)
+			table.update_item(update_record)
+			ui.body("  Updated")
+			updated_cnt += 1
+			time.sleep(1)
+		if should_delete:
+			ui.pretty(delete_record)
+			table.delete_item(delete_record['artist_id'], delete_record['name'])
+			ui.body("  Updated")
+			updated_cnt += 1
+			time.sleep(1)
+	
+	if inserted_cnt + updated_cnt + deleted_cnt:
+		collective.set_genres_update()
+	return True, "  Inserts: " + ui.format_text(inserted_cnt, 'bold') + "\n  Updates: " + ui.format_text(updated_cnt, 'bold') + "\n  Deletes: " + ui.format_text(deleted_cnt, 'bold')
+
 
 def update_image_records(opts):
-# 	collective = get_collective()
+	collective = moses_common.collective.Collective(log_level=log_level, dry_run=dry_run)
+	
 	table = moses_common.dynamodb.Table('artintelligence.gallery-images', log_level=log_level, dry_run=dry_run)
 	records = table.scan()
 	
 	cnt = 0
+	inserted_cnt = 0
 	updated_cnt = 0
+	deleted_cnt = 0
 	total = len(records)
 	for record in records:
-		updated_record = {
+		if opts['limit'] and common.convert_to_int(opts['limit']) <= cnt:
+			break
+		should_insert = False
+		should_update = False
+		should_delete = False
+		dt = common.get_dt_now()
+		insert_record = record.copy()
+		insert_record['create_time'] = common.convert_datetime_to_string(dt)
+		insert_record['update_time'] = common.convert_datetime_to_string(dt)
+		update_record = {
+			"update_time": common.convert_datetime_to_string(dt),
 			"filename": record['filename'],
 			"create_time": record['create_time']
 		}
-		if opts['limit'] and opts['limit'] <= cnt:
-			break
+		delete_record = {
+			"filename": record['filename'],
+			"create_time": record['create_time']
+		}
+		
+		
+		# Filter
+		if 'aspect_ratio' in record:
+			continue
 		cnt += 1
-		should_change = False
 		ui.header(record['filename'])
 		
 		
+		
+		
 		# Start manipulate record
-		
-# 		artist = collective.get_artist(record['query-artist'])
-		
-		if record.get('query-model') in ['sdxl', 'sd15', 'del', 'ds', 'rv']:
-			updated_record['query-model'] = get_full_model_name(record['query-model'])
-			should_change = True
+		update_record['aspect_ratio'] = common.round_half_up(common.convert_to_int(record['width']) / common.convert_to_int(record['height']), 2)
+		should_update = True
 		
 		# End manipulate record
 		
 		
-		if should_change:
-			table.update_item(updated_record)
+		if should_insert:
+			ui.pretty(insert_record)
+			table.put_item(insert_record)
+			ui.body("  Inserted")
+			inserted_cnt += 1
+			time.sleep(1)
+		if should_update:
+			ui.pretty(update_record)
+			table.update_item(update_record)
 			ui.body("  Updated")
 			updated_cnt += 1
+			time.sleep(1)
+		if should_delete:
+			ui.pretty(delete_record)
+			table.delete_item(delete_record['artist_id'], delete_record['name'])
+			ui.body("  Updated")
+			updated_cnt += 1
+			time.sleep(1)
 	
-	return True, "  Updates: " + ui.format_text(updated_cnt, 'bold')
+	if inserted_cnt + updated_cnt + deleted_cnt:
+		collective.set_images_update()
+	return True, "  Inserts: " + ui.format_text(inserted_cnt, 'bold') + "\n  Updates: " + ui.format_text(updated_cnt, 'bold') + "\n  Deletes: " + ui.format_text(deleted_cnt, 'bold')
 
+def search(args, opts):
+	if args.get('target') not in ['artists', 'works', 'images']:
+		return False, "Target must be one of 'artists', 'works', or 'images'"
+	
+	target = args.get('target')
+	if target == 'artists':
+		target = 'collective'
+	table = moses_common.dynamodb.Table(f"artintelligence.gallery-{target}", log_level=log_level, dry_run=dry_run)
+	records = table.scan()
+	
+	if not args['args'] or not args['args'][0]:
+		return False, "Search expression required"
+	search_string = args['args'][0]
+	rematch = re.compile(search_string, re.IGNORECASE)
+	resub = re.compile(r' *(' + search_string + ') *', re.IGNORECASE)
+	
+	cnt = 0
+	total = len(records)
+	for record in records:
+		if opts['limit'] and common.convert_to_int(opts['limit']) <= cnt:
+			break
+		
+		# Filter
+		json = common.make_json(record)
+		if not rematch.search(json):
+			continue
+		
+		header = record[table.partition_key.name]
+		if table.sort_key:
+			header += ' - ' + record[table.sort_key.name]
+		ui.header(header)
+		
+		for key, value in record.items():
+			if type(value) is list:
+				json = common.make_json(value)
+				if rematch.search(json):
+					json = resub.sub(r' `\1` ', json)
+					ui.body(f"  *{key}:* {json}")
+			elif type(value) is str:
+				if rematch.search(value):
+					value = resub.sub(r' `\1` ', value)
+					ui.body(f"  *{key}:* {value}")
+		
+		cnt += 1
+		
+	return True, "  Found: " + ui.format_text(cnt, 'bold')
+
+
+def test(opts):
+	collective = moses_common.collective.Collective(openai_api_key='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', log_level=log_level, dry_run=dry_run)
+	artist = collective.get_artist_by_id('anato_finnstark')
+	genres = artist.genres
+	genre = genres[0]
+	subject = genre.choose_subject()
+	print("subject {}: {}".format(type(subject), subject))
+	return True, subject
+# 	gpt = moses_common.openai.GPT(openai_api_key='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', log_level=log_level, dry_run=dry_run)
+# # 	results = gpt.chat('Generate a list of 20 subjects of illustrations by Anato Finnstark.', strip_double_quotes=True)
+# # 	print("results {}".format(type(results)))
+# # 	print(results)
+# 	tags = gpt.process_list(results)
+# 	print("tags {}: {}".format(type(tags), tags))
+# 	return True, ''
+
+
+def update_url(args, opts):
+	collective = moses_common.collective.Collective(log_level=log_level, dry_run=dry_run)
+	artist = collective.get_artist_by_name(args['target'])
+	if not artist:
+		return False, f"Artist '{artist_name}' not found"
+	
+	ui.title(artist.name)
+	should_update = False
+	if args['args'] and re.match(r'https://en\.wikipedia\.org/wiki/', args['args'][0]):
+		artist.external_url = args['args'][0]
+		should_update = True
+	
+	if not artist.external_url:
+		return False, f"No artist URL"
+	if re.match(r'https://en\.wikipedia\.org/wiki/', artist.external_url):
+		name = re.sub(r'https://en\.wikipedia\.org/wiki/', '', artist.external_url)
+		page = get_wikipedia_page(name)
+		if page:
+			ui.body("  Found " + page.title)
+			artist.bio = page.summary
+			should_update = True
+	
+	
+	if not should_update:
+		return False, "Nothing to update"
+	
+	success = artist.save()
+	if not success:
+		return False, "Failed to update artist"
+	return True, "Updated artist"
+
+
+
+
+
+"""
+weight, tag = split_tag(category)
+"""
+def split_tag(cat):
+	weight = 1
+	tag = cat
+	if re.search(r':', cat):
+		parts = cat.split(':')
+		if not parts[1]:
+			parts[1] = None
+		weight = common.convert_to_int(parts[0])
+		tag = parts[1]
+	return weight, tag
+
+
+def get_art_forms():
+	art_forms = {
+		"illustration": {
+			"name": "illustration",
+			"methods": ["aquatint", "chalk", "charcoal", "engraving", "ink", "linocut", "lithography", "pencil", "print", "screen print", "watercolor", "woodcut", "woodblock print"]
+		},
+		"drawing": {
+			"name": "drawing"
+		},
+		"painting": {
+			"name": "painting",
+			"methods": ["acrylic", "gouache", "guache", "lithography", "oil", "pastel", "pastels", "tempera", "watercolor"]
+		},
+		"photography": {
+			"name": "photograph",
+			"methods": []
+		},
+		"sculpture": {
+			"name": "sculpture",
+			"methods": ["marble"]
+		}
+	}
+	art_forms['drawing']['methods'] = art_forms['illustration']['methods']
+	return art_forms
 
 def get_full_model_name(short_name=None):
 	if short_name == 'sdxl09':
@@ -443,6 +922,19 @@ def get_full_model_name(short_name=None):
 	else:
 		return None
 
+
+def get_wikipedia_page(artist_name):
+	try:
+		page = wikipedia.page(artist_name, auto_suggest=False)
+	except:
+		page = None
+	if not page:
+		try:
+			titles = wikipedia.search(artist_name)
+			page = wikipedia.page(titles[0], auto_suggest=False)
+		except:
+			page = None
+	return page
 
 
 def get_collective():
@@ -466,9 +958,12 @@ if __name__ == '__main__':
 			"label": "Action",
 			"required": True
 		}, {
-			"name": "file",
-			"label": "File",
-			"type": "glob"
+			"name": "target",
+			"label": "Target"
+# 		}, {
+# 			"name": "file",
+# 			"label": "File",
+# 			"type": "glob"
 		}],
 		"options": [ {
 			"short": "v",
@@ -490,6 +985,8 @@ if __name__ == '__main__':
 			"long": "delete"
 		} ]
 	})
+	if opts['limit']:
+		opts['limit'] = common.convert_to_int(opts['limit']);
 	dry_run, log_level, limit = common.set_basic_args(opts)
 
 	handler(args, opts)

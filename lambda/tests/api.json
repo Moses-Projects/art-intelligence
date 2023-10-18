@@ -6,7 +6,8 @@
 	"body": {
 		"offset": 0,
 		"search": null,
-		"exact_score": "no_score"
+		"min_aspect_ratio": "2.2",
+		"limit": "2"
 	}
 
 }

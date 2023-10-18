@@ -1,0 +1,7 @@
+{
+	"method": "POST",
+	"path": "/get_genres",
+	"body": {
+		"artist_id": "andreas_achenbach"
+	}
+}

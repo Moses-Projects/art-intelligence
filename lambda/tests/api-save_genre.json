@@ -1,0 +1,28 @@
+{
+	"method": "POST",
+	"path": "/save_genre",
+	"body": 	{
+		"artist_id": "thomas_w_schaller",
+		"name": "architecture",
+		"methods": [
+			"1:watercolor painting"
+		],
+		"styles": [],
+		"subjects": [
+			"!Generate a list of 20 descriptions of content of paintings by Thomas W Schaller."
+		],
+		"modifiers": [
+			"1:architecture"
+		],
+		"locations": [],
+		"time_period": "",
+		"notes": [
+			"Subjects:",
+			"2:cityscape",
+			"3:city street",
+			"1:monument",
+			"3:bridge",
+			"1:courtyard"
+		]
+	}
+}

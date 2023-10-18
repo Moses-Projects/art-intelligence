@@ -29,69 +29,397 @@
 	 -->
 		<meta name="apple-mobile-web-app-title" content="ART Int">
 		<meta name="application-name" content="ART Int">
+		<style>
+			body {
+				margin: 0;
+				padding: 0;
+				background-color: black;
+				color: black;
+				font-family: sans-serif;
+				font-size: 16px;
+			}
+			@media (min-width: 1023px) {
+				body { font-size: 1.1em; }
+			}
+			@media (min-width: 1279px) {
+				body { font-size: 1.2em; }
+			}
+			@media (min-width: 1439px) {
+				body { font-size: 1.4em; }
+			}
+			@media (min-width: 1919px) {
+				body { font-size: 1.6em; }
+			}
+			@media (min-width: 2879px) {
+				body { font-size: 2.0em; }
+			}
+			
+			a {
+				color: #000;
+			}
+			
+			#viewer {
+				width: 100%;
+				position: absolute;
+				margin: 0;
+				top: 0;
+				bottom: 0;
+				left: 0;
+				right: 0;
+			}
+			#viewer #img {
+				position: relative;
+				object-fit: contain;
+				height: 100%;
+				width: 100%;
+				margin:auto;
+			}
+			
+			#prevImageButton, #nextImageButton {
+				width: 50%;
+				height: 100%;
+				position: absolute;
+				margin: 0;
+				top: 0;
+				bottom: 0;
+			}
+			#prevImageButton {
+				left: 0;
+				cursor: default;
+			}
+			#nextImageButton {
+				right: 0;
+				cursor: default;
+			}
+			
+			#idDisplay {
+				display: none;
+				position: absolute;
+				height: 1.2em;
+				bottom: 0;
+				left: 0;
+				padding: 5px;
+				background-color: rgba(255, 255, 255, 0.6);
+			}
+			#commentDisplay {
+				display: none;
+				position: absolute;
+				height: 3.4em;
+				bottom: 0;
+				left: 0;
+				right: 4.2em;
+				padding: 5px;
+				overflow-y: auto;
+				background-color: rgba(255, 255, 255, 0.6);
+				color: black;
+				font-family: sans-serif;
+				font-size: 1.2em;
+			}
+			
+			#buttonDownload {
+				display: none;
+				position: absolute;
+				bottom: 0;
+				right: 0;
+				border: none;
+				border-radius: 0.5em;
+				width: 1.8em;
+				height: 1.8em;
+				margin: 10px;
+				background-color: rgba(255, 255, 255, 0.6);
+				font-family: sans-serif;
+				font-size: 1.5em;
+				line-height: 1.8em;
+				text-align: center;
+				text-decoration: none;
+				cursor: pointer;
+			}
+			#buttonDownload:hover {
+				background-color: #ddd;
+			}
+			
+			#errorWindow {
+				display: none;
+				position: absolute;
+				top: 0;
+				bottom: 0;
+				left: 0;
+				right: 0;
+			}
+			#errorWindow>div {
+				background-color: #fff;
+				margin: 3em auto;
+				border-radius: 1em;
+				width: 40em;
+				padding: 2em;
+				color: #c00;
+			}
+			#errorTitle {
+				font-size: 3em;
+				text-align: center;
+			}
+			#errorMessage {
+				margin: 1em 2em;
+				font-size: 2em;
+				text-align: left;
+			}
+		</style>
 	</head>
-	<body style="margin: 0; padding: 0; background-color: black;">
-		<div style="width: 100%; position: absolute; margin:0 0 3px 0; top:0; bottom:4.6em; left:0; right:0;">
-			<img id="img" style="height: 100%; width: 100%; object-fit: contain; position: relative; margin:auto;" />
+	<body>
+		<div id="viewer">
+			<img id="img" />
 		</div>
-		<div style="width: 50%; height: 100%; position: absolute; margin:0 0 3px 0; top:0; bottom:4.6em; left:0; cursor: w-resize;" onClick="prevImage()"></div>
-		<div style="width: 50%; height: 100%; position: absolute; margin:0 0 3px 0; top:0; bottom:4.6em; right:0; cursor: e-resize;" onClick="nextImage()"></div>
-		<div style="position: absolute; height: 3.4em; bottom: 0; left: 0; right: 0; padding: 5px; overflow-y:auto; background-color: rgba(255, 255, 255, 0.6); color: black; font-family: sans-serif; font-size: 1.2em;" id="comment_display">Loading...</div>
+		<div id="prevImageButton" onClick="prevImage()"></div>
+		<div id="nextImageButton" onClick="nextImage()"></div>
+		<div id="idDisplay">Loading...</div>
+		<div id="commentDisplay">Loading...</div>
+		<a id="buttonDownload" href="">&#x2913;</a>
+		<div id="errorWindow">
+			<div>
+				<h1 id="errorTitle"></h1>
+				<div id="errorMessage"></div>
+			</div>
+		</div>
 	</body>
 	<script type="text/javascript">
-		const img = document.getElementById("img");
-		const commentDisplay = document.getElementById("comment_display");
-		const urlParams = new URLSearchParams(location.search);
 		
-		var interval;
-		var intervalDuration = 5 * 60 * 1000;
-		let currentOffset = 1;
-		if (urlParams.get('offset')) { currentOffset = parseInt(urlParams.get('offset')); }
+		// DISPLAY FUNCTIONS
+		
+		function displayError(title, message) {
+			let errorWindow = document.getElementById("errorWindow");
+			let errorTitle = document.getElementById("errorTitle");
+			let errorMessage = document.getElementById("errorMessage");
+			
+			errorTitle.innerText = title;
+			errorMessage.innerHTML = message;
+			errorWindow.style.display = "block";
+		}
+		function hideError() {
+			let errorWindow = document.getElementById("errorWindow");
+			let errorTitle = document.getElementById("errorMessage");
+			let errorMessage = document.getElementById("errorMessage");
+			
+			errorTitle.innerText = "";
+			errorMessage.innerText = "";
+			errorWindow.style.display = "none";
+		}
+		
+		function showIdDisplay(text) {
+			idDisplay.innerHTML = text;
+			idDisplay.style.display = 'block';
+		}
+		function hideIdDisplay() {
+			idDisplay.innerText = '';
+			idDisplay.style.display = 'none';
+		}
+		function showDownloadButton() {
+			if (!kiosk) {
+				buttonDownload.style.display = 'block';
+			}
+		}
+		function hideDownloadButton() {
+			buttonDownload.style.display = 'none';
+		}
+		
+		function setNavButtons() {
+			if (mode == 'shuffle') {
+				prevImageButton.style.cursor = 'pointer';
+				nextImageButton.style.cursor = 'pointer';
+			} else {
+				prevImageButton.style.cursor = 'w-resize';
+				nextImageButton.style.cursor = 'e-resize';
+			}
+		}
+		function unsetNavButtons() {
+			prevImageButton.style.cursor = 'default';
+			nextImageButton.style.cursor = 'default';
+		}
+		
+		// DATA FUNCTIONS
+		
+		function getCurrentId() {
+			let fullPath = (window.location.pathname+window.location.search).split('?')[0];
+			let pathParts = fullPath.split("/");
+			let currentId = null;
+			if (/^(latest|recent.html)$/.test(pathParts[1])) {
+				currentId = 'latest';
+			} else if (/^\d{10}$/.test(pathParts[1])) {
+				currentId = pathParts[1];
+			} else {
+				displayError('Image not found', 'This URL does not point to a valid image.<br>Redirecting to the <a href="/latest">latest image</a> in 5 seconds.');
+				setTimeout(redirectToLatest, 5000);
+			}
+			return currentId;
+		}
+		
+		function redirectToLatest() {
+			window.location.replace('/latest');
+		}
 		
 		function prevImage() {
-			clearInterval(interval);
-			show(currentOffset - 1)
+			updatePage(prevId);
 		}
 		function nextImage() {
+			updatePage(nextId);
+		}
+		function updatePage(id) {
 			clearInterval(interval);
-			show(currentOffset + 1)
+			let urlObj = new URL(window.location.href);
+			urlObj.pathname = '/' + id;
+			console.log('pushState ' + urlObj.pathname);
+			window.history.pushState(null, '', urlObj.href);
+			load(id);
 		}
 		
-		function show(offset) {
-			commentDisplay.innerText = 'Loading...';
-			var data = {
-				"offset": offset,
-				"nsfw": false,
-				"score": 3
-			}
-			if (urlParams.get('artist')) { data['artist'] = urlParams.get('artist'); }
-			if (urlParams.get('search')) { data['search'] = urlParams.get('search'); }
-			if (urlParams.get('orientation')) { data['orientation'] = urlParams.get('orientation'); }
+		function load(id) {
+			id = id.toString();
+			id = id.replace(/^\//, '');
 			
-			fetch(`/api/get_latest`, {
+			showIdDisplay('Loading...');
+			commentDisplay.innerText = 'Loading...';
+			hideDownloadButton();
+			unsetNavButtons();
+			
+			let data = Object.assign({}, query);
+			if (!data['nsfw']) {
+				data['nsfw'] = false;
+			}
+			if (!data['score'] && !data['exact_score']) {
+				data['score'] = 3;
+			}
+			data['mode'] = mode;
+			console.log('data'); console.log(data);
+			
+			let endpoint = '/api/get/' + id;
+			
+			fetch(endpoint, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(data)
 			})
 				.then(response => response.json())
 				.then(json => {
-					if (json['images'] && json['images'].length) {
-						console.log(json);
-						commentDisplay.innerText = json['images'][0].id + ': ' + json['images'][0].prompt;
-						img.src = `/images/` + json['images'][0].filename;
-						currentOffset = json.offset;
-						var urlObj = new URL(window.location.href);
-						urlObj.searchParams.set('offset', currentOffset);
+					let urlObj = new URL(window.location.href);
+					console.log('urlObj.pathname'); console.log(urlObj.pathname);
+					if (/^\/(latest|recent.html)/.test(urlObj.pathname) && json['status'] == 'success' && json['image']['id']) {
+						urlObj.pathname = '/' + json['image']['id'];
+						console.log('urlObj.pathname latest ' + urlObj.href);
 						window.history.replaceState(null, '', urlObj.href);
+					}
+					
+					if (json['status'] == 'success') {
+						if (json['image']) {
+							console.log(json);
+							image = json['image']
+							
+							// Set display message
+							displayMessage = image.id
+							if (image['artist']) {
+								if (!image['artist']['external_url']) {
+									image['artist']['external_url'] = 'https://duckduckgo.com/?q=' + image['query-artist_name'] + ' artist bio'
+								}
+								displayMessage = image.id + ' Inspired by <a href="' + image['artist']['external_url'] + '" target="_blank">' + image['query-artist_name'] + '</a>';
+							}
+							showIdDisplay(displayMessage);
+							showDownloadButton();
+							
+							// Set description message
+							if (image.model) {
+								commentDisplay.innerText = image.id + ' ' + image.model + ': ' + image.prompt;
+							} else {
+								commentDisplay.innerText = image.id + ' ' + image.engine_label + ': ' + image.prompt;
+							}
+							img.src = `/images/` + image.filename;
+							buttonDownload.href = img.src;
+							
+							// Set nav buttons
+							if (mode == 'shuffle') {
+								if (json['random_id']) {
+									prevId = json['random_id'];
+									nextId = json['random_id'];
+								}
+							} else {
+								if (json['newer_id']) { prevId = json['newer_id']; }
+								if (json['older_id']) { nextId = json['older_id']; }
+							}
+							setNavButtons();
+							
+						} else {
+							hideIdDisplay();
+							hideDownloadButton();
+							commentDisplay.innerText = "No search results";
+							img.src = `/assets/not-found.png`;
+						}
 					} else {
-						commentDisplay.innerText = "No images found";
+						hideIdDisplay();
+						hideDownloadButton();
+						commentDisplay.innerText = "Image not found";
 						img.src = `/assets/not-found.png`;
 					}
 				});
-			interval = setInterval(nextImage, intervalDuration);
+			interval = setInterval(nextImage, intervalDuration * 1000);
 		}
 		
-		show(currentOffset);
+		
+		
+		// SETUP
+		
+		const img = document.getElementById("img");
+		const prevImageButton = document.getElementById("prevImageButton");
+		const nextImageButton = document.getElementById("nextImageButton");
+		const idDisplay = document.getElementById("idDisplay");
+		const commentDisplay = document.getElementById("commentDisplay");
+		const buttonDownload = document.getElementById("buttonDownload");
+		
+		var currentId = null;
+		var prevId = null;
+		var nextId = null;
+		var randomId = null;
+		var idHistory = [];
+		var idHistoryIndex = -1;
+		
+		// Get initial query args
+		const queryParams = new URLSearchParams(window.location.search)
+		const query = Object.fromEntries(queryParams)
+		
+		// Set mode
+		var mode = 'sequential';
+		if (query['mode'] == 'shuffle') {
+			mode = 'shuffle';
+		}
+		
+		// Set kiosk
+		var kiosk = true;
+		if (!query['kiosk'] || query['kiosk'] != 'true') {
+			kiosk = false;
+			showDownloadButton();
+		}
+		
+		// Set interval
+		var interval;
+		var intervalDuration = 5 * 60;
+		if (/^0$/.test(query['interval'])) {
+			intervalDuration = null;
+		} else if (/^\d+$/.test(query['interval'])) {
+			intervalDuration = Number(query['interval']);
+			if (intervalDuration < 5) {
+				intervalDuration = 5
+			}
+		}
+		console.log('load');
+		
+		window.addEventListener("popstate", function(e) {
+			console.log('Back history ' + window.location.pathname);
+			load(window.location.pathname);
+			event.preventDefault();
+		});
+		
+		// START
+		
+		currentId = getCurrentId();
+		console.log('currentId'); console.log(currentId);
+		
+		if (currentId) { load(currentId); }
 		
 	</script>
 </html>

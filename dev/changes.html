@@ -34,14 +34,56 @@
 
 	<body>
 		<div class="logo">
-			<img src="/assets/dragonfly-logo.png" alt="ART Intelligence logo" title="ART Intelligence logo">
+			<img id="mainImage" src="/assets/dragonfly-logo.png" alt="ART Intelligence logo" title="ART Intelligence logo" onClick="viewImage()">
 		</div>
 		<h1>ART<i>ificial</i> INTELLIGENCE</h1>
 		<h2>Changes</h2>
 		
 		<p><a href="/">Home</a> | Changes | <a href="/about.html">About</a></p>
 		
-		<h3>2023-09-09</h3>
+		<h3>2023-10-14</h3>
+		<ul>
+			<li>Added GPT-based subjects to all the artists with no defined subjects (most of them). While letting GPT do the entire Stable Diffusion prompt did not produce good results, having GPT do this piece of the SD prompt has yielded fantastic results. I still need to tweak the GPT prompt for some artists, but it is working well in most cases.</li>
+		</ul>
+		<h3>2023-10-09</h3>
+		<ul>
+			<li>Rewrote the viewer!</li>
+			<li>Now the viewer uses proper URLs so you can bookmark pages, share URLs, and use the back and forward buttons on your browser.</li>
+			<li>I temporarily removed the full description and let the image use the full window. The description and more will be available in the future if you want to display them.</li>
+			<li>In place of the description is the artist who inspired the image and a link to their personal web page or Wikipedia page or if I don't have either of those, it will take you to a web search for them.</li>
+			<li>Added kiosk mode that simply hides the download button. Add &quot;kiosk=true&quot; to the URL.</li>
+		</ul>
+		<h3>2023-09-28</h3>
+		<ul>
+			<li>When giving Stable Diffusion a simple subject, like &quot;busy city street&quot;, the results will all be different, but not that varied. With landscapes and still lifes, that's fine. With surreal paintings or fantasy subjects, there is no simple way to get a variety of different results without spelling out some very specific descriptions of what should be in each picture. To solve that, I added a feature where I can define a picture's subject with a GPT prompt. GPT is great at coming up with a list of descriptions tailored to the artist. Ask for a list of description of paintings by tronie artist Adriaen Brouwer and you get &quot;A lively depiction of a handful of outdoor drinkers engaging in an animated conversation, their faces aglow from the fire nearby&quot; or &quot;A vivid portrayal of a musician playing a lute, his expressions perfectly capturing the emotion he puts into his art&quot;. Much better!</li>
+		</ul>
+		<h3>2023-09-25</h3>
+		<ul>
+			<li>I haven't posted in a long time, but I have been busy. I gave up on getting descriptions of paintings from GPT. Stable Diffusion XL 1.0 works great with a few keywords and honesty, the descriptions weren't representative of the styles of the chosen artists. I am getting much more variety out of the generated images now.</li>
+			<li>I switched to the new artists database and put a lot of work into the management interface to define what kind of works to produce.</li>
+			<li>There are new query string parameters. I really should document those. Here are some to get specific orientations/aspect ratios.
+				<ul>
+					<li>orientation={&quot;landscape&quot; or &quot;portrait&quot; or &quot;square&quot;} - Easy way of getting basic aspect ratios.</li>
+					<li>min_aspect_ratio={number}</li>
+					<li>max_aspect_ratio={number}</li> - Use these two to get just the range of aspect ratios you want. An aspect ratio of 1.0 is a square. 2.0 is twice as wide as it is tall. 0.5 is half as wide as it is tall.
+				</ul>
+			</li>
+			<li>
+				There are currently four major versions of generated images. Use &quot;version={number}&quot; to get the given version or more recent. Use &quot;exact_version={number}&quot; to only get the version you want.
+				<ul>
+					<li>1 - Stable Diffusion 1.5 using checkpoints. Prettified images and people, which doesn't make for interesting art.</li>
+					<li>2 - Stable Diffusion XL Beta. Better results, but height is limited to 512 pixels.</li>
+					<li>3 - Stable Diffusion XL 1.0. Higher resolutions. Better results, but still using GPT descriptions that don't reflect the artists' styles as well.</li>
+					<li>4 - Stable Diffusion XL 1.0. Best results. Uses a variety of aspect ratios based on each artist's works.</li>
+				</ul>
+			</li>
+		</ul>
+		<h3>2023-08-18</h3>
+		<ul>
+			<li>I've been working on a lot of behind-the-scenes stuff. I have a new artists database that will let me define more specific attributes about an artist and their works. Once I get this in place, I hope the images will have more variety and will match subjects and styles of the author's works more closely.</li>
+			<li>Added a download button! I've been meaning to do that for a long time.</li>
+		</ul>
+		<h3>2023-08-09</h3>
 		<ul>
 			<li>Tried out Stable Diffusion XL 0.9 and 1.0. After figuring out that a resolution of less than 1024x1024 gives you a cropped image, I started getting somewhat better images than the beta. However, the most noticeable improvement to me is the lack of duplicate artifacts. With XL beta and 1.5, non-square pictures would often seem odd because there would be two main subjects when clearly there should have been one. Double streets, streams, or waterfalls would combine at unnatural angles. Pictures with mountains would have two distinctive and very similar peaks. Creepier still, tall portraits would sometimes have two faces, one above the other. The more I saw the artifacts, the more recognizable they became. I've only generated a couple dozen with XL 1.0 so far, but haven't spotted a duplicate artifact yet!</li>
 			<li>I switched to XL 1.0 as the default. It is roughly three times the cost, but definitely more than three times the success rate at producing high-quality images. I cut the generation rate to half, but will end up with more, usable pictures overall.</li>
@@ -71,4 +113,56 @@
 			<p>No browser cookies, local storage, or session storage is used by this website.</p>
 		</footer>
 	</body>
+	<script type="text/javascript">
+		const mainImage = document.getElementById("mainImage");
+		
+		var currentId;
+		var nextId = 'latest';
+		var imageReloadTimer;
+		
+		function load() {
+			window.clearInterval(imageReloadTimer);
+			let data = {
+				"nsfw": false,
+				"score": 4,
+				"version": 3,
+				"mode": 'shuffle'
+			}
+			
+			let endpoint = '/api/get/' + nextId;
+			
+			fetch(endpoint, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(data)
+			})
+				.then(response => response.json())
+				.then(json => {
+					if (json['status'] == 'success') {
+						if (json['image']) {
+							console.log(json);
+							nextId = json.random_id
+							image = json.image
+							currentId = image.id
+							
+							mainImage.src = `/images/` + image.filename;
+							mainImage.style.cursor = 'pointer';
+							if (image['artist']) {
+								mainImage.alt = 'Inspired by ' + image['artist']['name'];
+								mainImage.title = 'Inspired by ' + image['artist']['name'];
+							}
+						}
+					}
+				});
+			imageReloadTimer = setInterval(load, 15000);
+		}
+		
+		function viewImage() {
+			if (currentId) {
+				window.location.href = '/' + currentId;
+			}
+		}
+		
+		imageReloadTimer = setInterval(load, 5000);
+	</script>
 </html>
