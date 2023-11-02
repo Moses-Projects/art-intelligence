@@ -267,7 +267,7 @@
 			let fullPath = (window.location.pathname+window.location.search).split('?')[0];
 			let pathParts = fullPath.split("/");
 			let currentId = null;
-			if (/^(latest|recent.html)$/.test(pathParts[1])) {
+			if (/^(latest|viewer.html)$/.test(pathParts[1])) {
 				currentId = 'latest';
 			} else if (/^\d{10}$/.test(pathParts[1])) {
 				currentId = pathParts[1];
@@ -318,16 +318,21 @@
 			
 			let endpoint = '/api/get/' + id;
 			
+			headers = { "Content-Type": "application/json" }
+			if (userTokens && userTokens['access_token']) {
+				headers['Authorization'] = userTokens['access_token']
+			}
+			
 			fetch(endpoint, {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: headers,
 				body: JSON.stringify(data)
 			})
 				.then(response => response.json())
 				.then(json => {
 					let urlObj = new URL(window.location.href);
 					console.log('urlObj.pathname'); console.log(urlObj.pathname);
-					if (/^\/(latest|recent.html)/.test(urlObj.pathname) && json['status'] == 'success' && json['image']['id']) {
+					if (/^\/(latest|viewer.html)/.test(urlObj.pathname) && json['status'] == 'success' && json['image']['id']) {
 						urlObj.pathname = '/' + json['image']['id'];
 						console.log('urlObj.pathname latest ' + urlObj.href);
 						window.history.replaceState(null, '', urlObj.href);

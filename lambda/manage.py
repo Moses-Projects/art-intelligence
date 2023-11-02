@@ -23,15 +23,17 @@ import moses_common.visual_artists as visual_artists
 
 ui = moses_common.ui.Interface(use_slack_format=True, usage_message="""
 Manage images and data for Art Intelligence.
-  manage.py astats             # Display category stats on artists db
-  manage.py deploy             # Copy dev S3 website to prod S3
-  manage.py fail               # Send local fail website to S3
-  manage.py import <filename>  # Import images from image_generator.py
-  manage.py refresh            # Grab new artist file and sync to db
-  manage.py send               # Send local dev website to S3
-  manage.py stats              # Display category stats on image db
-  manage.py artist_db          # Update artist db - requires editing
-  manage.py image_db           # Update image db - requires editing
+  manage.py astats                   # Display category stats on artists db
+  manage.py deploy                   # Copy dev S3 website to prod S3
+  manage.py fail                     # Send local fail website to S3
+  manage.py import <filename>        # Import images from image_generator.py
+  manage.py new_artist <artist name> # Add new artist and default work record
+  manage.py refresh                  # Grab new artist file and sync to db
+  manage.py send                     # Send local dev website to S3
+  manage.py stats                    # Display category stats on image db
+  manage.py update_url [url]         # Update artist URL and bio
+  manage.py artist_db                # Update artist db - requires editing
+  manage.py image_db                 # Update image db - requires editing
   
   Options:
     -h, --help                  This help screen.

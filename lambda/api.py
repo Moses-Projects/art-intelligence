@@ -79,11 +79,16 @@ def handler(event, context):
 	if collective.images_were_updated():
 		image_records = read_image_records(images_table)
 	
-	api = moses_common.api_gateway.Request(event, log_level=log_level, dry_run=dry_run)
+	api = moses_common.api_gateway.Request(event, log_level=7, dry_run=dry_run)
 	
 	path = api.parse_path()
 	
 	method = api.method
+	
+	if 'Authorization' in api.headers:
+		access_token = api.headers.get('Authorization')
+		user_info = get_user_info(access_token)
+		print("user_info {}: {}".format(type(user_info), user_info))
 	
 	query, metadata = api.process_query()
 	body = api.body
@@ -670,6 +675,19 @@ def set_score(body):
 	}
 
 
+def get_user_info(access_token):
+	url = 'https://auth.artintelligence.gallery/oauth2/userInfo';
+	response_code, response_data = common.get_url(url, {
+		"bearer_token": access_token,
+		"headers": {
+			"Content-Type": "application/x-www-form-urlencoded"
+		}
+	})
+	
+	if response_code != 200:
+		ui.error(f"Failed with code {response_code}")
+		return None
+	return response_data
 
 def error(message):
 	return {
