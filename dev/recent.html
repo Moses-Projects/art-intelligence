@@ -116,7 +116,7 @@
 				background-color: #ddd;
 			}
 			#idDisplay {
-				display: none;
+				display: block;
 				position: absolute;
 				height: 1.2em;
 				bottom: 0;
@@ -124,7 +124,10 @@
 				padding: 5px;
 				background-color: rgba(255, 255, 255, 0.6);
 			}
-			#commentDisplay {
+			.open #idDisplay {
+				bottom: 3.4em;
+			}
+			#artistDisplay, #commentsDisplay, #infoDisplay {
 				display: none;
 				position: absolute;
 				height: 3.4em;
@@ -159,6 +162,9 @@
 			}
 			#buttonDownload:hover {
 				background-color: #ddd;
+			}
+			.open #buttonDownload {
+				bottom: 3.4em;
 			}
 			
 			#errorWindow {
@@ -195,8 +201,10 @@
 		<div id="prevImageButton" onClick="prevImage()"></div>
 		<div id="nextImageButton" onClick="nextImage()"></div>
 		<div id="userDisplay" class="fadeOut"><a href="https://auth.artintelligence.gallery/oauth2/authorize?client_id=43hitjgtpit8ijnfh9pfm99bg3&response_type=code&scope=email+openid+phone&redirect_uri=https://dev.artintelligence.gallery/latest">Sign In</a></div>
-		<div id="idDisplay">Loading...</div>
-		<div id="commentDisplay">Loading...</div>
+		<div id="idDisplay" onClick="toggleDisplays()">Loading...</div>
+		<div id="artistDisplay">Loading...</div>
+		<div id="commentsDisplay">Loading...</div>
+		<div id="infoDisplay"">Loading...</div>
 		<a id="buttonDownload" class="fadeOut" href="">&#x2913;</a>
 		<div id="errorWindow">
 			<div>
@@ -261,6 +269,24 @@
 			nextImageButton.style.cursor = 'default';
 		}
 		
+		function toggleDisplays() {
+			console.log("toggleDisplays()");
+			if (displaysOpen) { closeDisplays(); }
+			else { openDisplays(); }
+		}
+		function openDisplays() {
+			displaysOpen = True;
+			document.body.classList.add('open');
+			artistDisplay.style.diplay = 'block';
+		}
+		function closeDisplays() {
+			displaysOpen = false;
+			artistDisplay.style.diplay = 'none';
+			commentsDisplay.style.diplay = 'none';
+			infoDisplay.style.diplay = 'none';
+			document.body.classList.remove('open');
+		}
+		
 		// DATA FUNCTIONS
 		
 		function getCurrentId() {
@@ -318,9 +344,14 @@
 			
 			let endpoint = '/api/get/' + id;
 			
+			headers = { "Content-Type": "application/json" }
+			if (userTokens && userTokens['access_token']) {
+				headers['Authorization'] = userTokens['access_token']
+			}
+			
 			fetch(endpoint, {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: headers,
 				body: JSON.stringify(data)
 			})
 				.then(response => response.json())
@@ -446,16 +477,16 @@
 		const nextImageButton = document.getElementById("nextImageButton");
 		const userDisplay = document.getElementById("userDisplay");
 		const idDisplay = document.getElementById("idDisplay");
-		const commentDisplay = document.getElementById("commentDisplay");
+		const artistDisplay = document.getElementById("artistDisplay");
+		const commentsDisplay = document.getElementById("commentsDisplay");
+		const infoDisplay = document.getElementById("infoDisplay");
 		const buttonDownload = document.getElementById("buttonDownload");
 		
 		var currentId = null;
 		var prevId = null;
 		var nextId = null;
 		var randomId = null;
-		var idHistory = [];
-		var idHistoryIndex = -1;
-		
+		var displaysOpen = false;
 		var userTokens;
 		var userInfo;
 		

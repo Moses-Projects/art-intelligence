@@ -8,11 +8,11 @@ import sys
 import time
 import wikipedia
 
-from duckduckgo_search import DDGS
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
 import moses_common.__init__ as common
+import moses_common.brave
 import moses_common.collective
 import moses_common.dynamodb
 import moses_common.s3
@@ -26,6 +26,7 @@ Manage images and data for Art Intelligence.
   manage.py astats                   # Display category stats on artists db
   manage.py deploy                   # Copy dev S3 website to prod S3
   manage.py fail                     # Send local fail website to S3
+  manage.py google                   # Search Brave for image results
   manage.py import <filename>        # Import images from image_generator.py
   manage.py new_artist <artist name> # Add new artist and default work record
   manage.py refresh                  # Grab new artist file and sync to db
@@ -60,6 +61,8 @@ def handler(args, opts):
 	elif action == 'fail':
 		os.chdir("/Users/tim/Repositories/art-intelligence")
 		subprocess.run(f"aws s3 sync{dry_run_arg} --delete fail s3://artintelligence.gallery/fail", shell=True)
+	elif action == 'google':
+		success, response = search_google(args['target'])
 # 	elif action == 'import':
 # 		success, response = import_image(args['file'], opts)
 	elif action == 'refresh':
@@ -153,6 +156,12 @@ def get_artist_stats(opts):
 			stats['no_subject'] += 1
 			
 	return True, stats
+
+def search_google(target):
+	collective = moses_common.collective.Collective(log_level=log_level, dry_run=dry_run)
+	artist = collective.get_artist_by_name(target)
+	results = artist.get_search_results(1)
+	return True, results
 
 def get_engine_list():
 	stabilityai = moses_common.stabilityai.StableDiffusion(

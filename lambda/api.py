@@ -5,7 +5,6 @@ import re
 import requests
 import sys
 
-from duckduckgo_search import DDGS
 from boto3 import client as boto3_client
 lambda_client = boto3_client('lambda', region_name="us-west-2",)
 
@@ -16,6 +15,7 @@ import moses_common.api_gateway
 import moses_common.collective
 import moses_common.dynamodb
 import moses_common.s3
+import moses_common.secrets_manager
 import moses_common.timer
 import moses_common.ui
 import moses_common.visual_artists as visual_artists
@@ -35,7 +35,10 @@ Select an image from the database.
 log_level = 6
 dry_run = False
 
-collective = moses_common.collective.Collective(log_level=log_level, dry_run=dry_run)
+secret = moses_common.secrets_manager.Secret('artintelligence.gallery/api_keys')
+api_keys = secret.get_value()
+
+collective = moses_common.collective.Collective(google_search_api_key=api_keys['GOOGLE_SEARCH_API_KEY'], google_search_project_cx=api_keys['GOOGLE_SEARCH_PROJECT_CX'], log_level=log_level, dry_run=dry_run)
 
 
 def read_image_records(table):
@@ -56,8 +59,11 @@ def read_image_records(table):
 		elif record['id'] <= 1693321367:
 			record['version'] = 3
 		# SDXL 1.0
-		else:
+		elif record['id'] <= 1718234171:
 			record['version'] = 4
+		# SD3
+		else:
+			record['version'] = 5
 	
 	collective.images_were_read()
 	return records
@@ -84,11 +90,6 @@ def handler(event, context):
 	path = api.parse_path()
 	
 	method = api.method
-	
-	if 'Authorization' in api.headers:
-		access_token = api.headers.get('Authorization')
-		user_info = get_user_info(access_token)
-		print("user_info {}: {}".format(type(user_info), user_info))
 	
 	query, metadata = api.process_query()
 	body = api.body
@@ -234,7 +235,7 @@ def get_artist(body):
 		return error("Missing 'artist_id' argument")
 	
 	if not artist:
-		return error("Artist '{}{}' not found".format(body.get('artist_id'), body.get('artist')))
+		return error("Artist '{}{}' not found".format(body.get('artist_id', ''), body.get('artist', '')))
 	artist_info = {
 		"status": "success",
 		"artist": artist.data
@@ -309,41 +310,21 @@ def get_search_results(body):
 	else:
 		return error("Missing 'artist_id' argument")
 	
-	keywords = 'artwork by ' + artist.name
-	
 	limit = common.convert_to_int(body.get('limit')) or 8
-	results_list = []
-	with DDGS() as ddgs:
-		ddgs_images_gen = ddgs.images(
-			keywords,
-			region="us-en",
-			safesearch="Off",
-			size=None,
-			type_image=None,
-			layout=None,
-			license_image=None,
-		)
-		cnt = 0
-		for r in ddgs_images_gen:
-			if cnt >= limit:
-				break
-			if re.search(r'\.explicit\.bing', r['thumbnail']):
-				continue
-			results_list.append(r)
-			cnt += 1
+	results = artist.get_search_results(10)
 	return {
 		"status": "success",
 		"artist": {
 			"id": artist.id,
 			"name": artist.name
 		},
-		"images": results_list,
+		"images": results,
 		"url": "https://duckduckgo.com/?" + common.url_encode({
 			"iax": "images",
 			"ia": "images",
-			"q": keywords
+			"q": "artwork by " + artist.name
 		}),
-		"total": len(results_list)
+		"total": len(results)
 	}
 	
 
@@ -505,6 +486,8 @@ def get_image(image_id, body):
 			"total": 0
 		}
 	
+	image_record = get_image_record(image_record['filename'], image_record['create_time'])
+	
 	response = {
 		"status": "success",
 		"image": image_record,
@@ -608,6 +591,9 @@ def get_image_record(filename, create_time):
 	record['id'] = common.get_epoch(record['create_time'])
 	if record['engine_name'] == 'sdxl':
 		record['engine_label'] = 'Stable Diffusion XL Beta'
+	elif record['engine_name'] == 'sinkin':
+		record['engine_name'] = 'sd15'
+		record['engine_label'] = 'Stable Diffusion 1.5'
 	return record
 
 def get_presigned_url(filename):
@@ -674,20 +660,6 @@ def set_score(body):
 		"image": record
 	}
 
-
-def get_user_info(access_token):
-	url = 'https://auth.artintelligence.gallery/oauth2/userInfo';
-	response_code, response_data = common.get_url(url, {
-		"bearer_token": access_token,
-		"headers": {
-			"Content-Type": "application/x-www-form-urlencoded"
-		}
-	})
-	
-	if response_code != 200:
-		ui.error(f"Failed with code {response_code}")
-		return None
-	return response_data
 
 def error(message):
 	return {

@@ -44,14 +44,18 @@ collective = moses_common.collective.Collective(openai_api_key=api_keys['OPENAI_
 
 
 def handler(event, context):
-	success, output = generate(event)
-	
-	if not success:
-		ui.error(output)
-		return {
-			"statusCode": 404,
-			"body": output
-		}
+	output = []
+	num_of_images = event.get('count', 1)
+	for i in range(num_of_images):
+		success, sub_output = generate(event)
+		
+		if not success:
+			ui.error(sub_output)
+			return {
+				"statusCode": 404,
+				"body": sub_output
+			}
+		output.append(sub_output)
 	
 	if type(output) is list:
 		output = {
@@ -83,7 +87,7 @@ def generate(event):
 	print("prompt {}: {}".format(type(prompt), prompt))
 	
 	# Get image config
-	data = get_image(prompt)
+	data = get_image(prompt, event)
 	if type(data) is str:
 		return data
 	
@@ -93,7 +97,7 @@ def generate(event):
 	return True, data
 
 
-def get_image(prompt):
+def get_image(prompt, event):
 	filename_prefix = None
 	if 'query' in prompt and 'artist_id' in prompt['query']:
 		filename_prefix = prompt['query']['artist_id']
@@ -104,9 +108,41 @@ def get_image(prompt):
 		save_directory = os.environ.get('HOME') + '/Downloads'
 	
 	success = False
-	model = 'sdxl10'
+	model = event.get('model', 'sd3')
 	data = "Model not recognized"
-	if re.match(r'sd', model):
+	
+	if re.match(r'si', model) or model == 'sd3':
+		# Set up stable diffusion
+		stable_image = moses_common.stabilityai.StableImage(
+			stability_key = api_keys['STABILITY_API_KEY'],
+			model = model,
+			save_directory = save_directory,
+			log_level = log_level,
+			dry_run = dry_run
+		)
+		
+		# Get data for image
+		data = stable_image.text_to_image(
+			prompt['prompt'],
+			negative_prompt=prompt.get('negative_prompt'),
+# 			seed=opts['seed'],
+# 			steps=opts['steps'],
+# 			cfg_scale=opts['cfg'],
+# 			width=prompt['width'],
+# 			height=prompt['height'],
+			filename_prefix=filename_prefix,
+			return_args=True,
+			aspect_ratio=prompt.get('aspect_ratio')
+		)
+		
+		# Add further data
+		if prompt and 'query' in prompt:
+			data['query'] = prompt['query']
+		
+		# Generate image
+		success, data = stable_image.text_to_image(data)
+	
+	elif re.match(r'sd', model):
 		# Set up stable diffusion
 		stable_diffusion = moses_common.stabilityai.StableDiffusion(
 			stability_key = api_keys['STABILITY_API_KEY'],
@@ -137,7 +173,7 @@ def get_image(prompt):
 		# Generate image
 		success, data = stable_diffusion.text_to_image(data)
 	
-	else:
+	elif model in ['ds', 'rv']:
 		# Set up sinkai
 		sinkinai = moses_common.sinkinai.SinkinAI(
 			sinkinai_api_key = api_keys['SINKIN_API_KEY'],

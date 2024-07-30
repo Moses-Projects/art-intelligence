@@ -2,10 +2,10 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<title>ARTificial INTELLIGENCE - Art by AI</title>
+		<title>ARTificial INTELLIGENCE FAIL - Failed Art by AI</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<meta name="description" content="AI generated art for AI generated descriptions of art.">
-		<meta name="keywords" content="AI, artificial intelligence, art, illustrations, painting">
+		<meta name="description" content="Failed AI generated art from AI generated descriptions of art.">
+		<meta name="keywords" content="fail, AI, artificial intelligence, art, illustrations, painting">
 		<meta name="generator" content="handmade">
 	
 		<link rel="apple-touch-icon" sizes="57x57" href="/assets/apple-icon-57x57.png">
@@ -303,7 +303,7 @@
 		</div>
 		<div id="prevImageButton" onClick="prevImage()"></div>
 		<div id="nextImageButton" onClick="nextImage()"></div>
-		<div id="userDisplay" class="fadeOut"><a href="https://auth.artintelligence.gallery/oauth2/authorize?client_id=43hitjgtpit8ijnfh9pfm99bg3&response_type=code&scope=email+openid+phone&redirect_uri=https://artintelligence.gallery/latest">Sign In</a></div>
+		<div id="userDisplay" class="fadeOut"><a href="https://auth.artintelligence.gallery/oauth2/authorize?client_id=43hitjgtpit8ijnfh9pfm99bg3&response_type=code&scope=email+openid+phone&redirect_uri=https://dev.artintelligence.gallery/latest">Sign In</a></div>
 		<div id="summaryDisplay" onClick="toggleDisplays()">Loading...</div>
 		<a id="buttonDownload" class="fadeOut" href="">&#x2913;</a>
 		<div id="infoWindow">
@@ -316,7 +316,7 @@
 			<div id="commentsDisplay" class="display">
 				<div id="commentsMessages">Loading...</div>
 				<div id="commentsSignin">
-					<a href="https://auth.artintelligence.gallery/oauth2/authorize?client_id=43hitjgtpit8ijnfh9pfm99bg3&response_type=code&scope=email+openid+phone&redirect_uri=https://artintelligence.gallery/latest">Sign in</a> to post comments.
+					<a href="https://auth.artintelligence.gallery/oauth2/authorize?client_id=43hitjgtpit8ijnfh9pfm99bg3&response_type=code&scope=email+openid+phone&redirect_uri=https://dev.artintelligence.gallery/latest">Sign in</a> to post comments.
 				</div>
 				<form id="commentsForm">
 					<label for="comment">Post a comment</label> <span class="notice">(Keep it clean and be nice. Offensive comments will be removed.)</span><br>
@@ -603,7 +603,7 @@
 				data['nsfw'] = false;
 			}
 			if (!data['score'] && !data['exact_score']) {
-				data['score'] = 3;
+				data['exact_score'] = 1;
 			}
 			data['mode'] = viewerMode;
 			
@@ -747,12 +747,12 @@
 					if (json && json.username) {
 						userInfo = json
 						console.log('User JSON:'); console.log(userInfo);
-						userDisplay.innerHTML = userInfo['username'] + '<br><a href="https://auth.artintelligence.gallery/logout?client_id=43hitjgtpit8ijnfh9pfm99bg3&logout_uri=https://' + window.location.hostname + '">Sign out</a>';
+						userDisplay.innerHTML = userInfo['username'] + '<br><a href="https://auth.artintelligence.gallery/logout?client_id=43hitjgtpit8ijnfh9pfm99bg3&logout_uri=https://dev.artintelligence.gallery">Sign out</a>';
 						commentsSignin.style.display = 'none';
 						commentsForm.style.display = 'block';
 					} else {
 						console.log('User JSON: no data');
-						userDisplay.innerHTML =  '<a href="https://auth.artintelligence.gallery/oauth2/authorize?client_id=43hitjgtpit8ijnfh9pfm99bg3&response_type=code&scope=email+openid+phone&redirect_uri=https://' + window.location.hostname + '/latest">Sign In</a>';
+						userDisplay.innerHTML =  '<a href="https://auth.artintelligence.gallery/oauth2/authorize?client_id=43hitjgtpit8ijnfh9pfm99bg3&response_type=code&scope=email+openid+phone&redirect_uri=https://dev.artintelligence.gallery/latest">Sign In</a>';
 						commentsSignin.style.display = 'block';
 						commentsForm.style.display = 'none';
 					}
